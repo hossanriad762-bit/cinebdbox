@@ -20,7 +20,7 @@ body{background:#0b0d14 radial-gradient(circle at 50% -10%,#1b2340,transparent 5
 .btn[disabled]{opacity:.4;pointer-events:none;background:#2a3047}
 .hid{display:none}
 .bad{padding:10px}.bad a{display:inline-block;margin-top:14px;color:#ffc43d}
-</style></head><body><div class="w" id="app"></div>
+.tips{margin:12px 0;padding:12px 14px;border-radius:14px;background:#13182a;border:1px solid #2a3350;text-align:left}.tips b{display:block;color:#ffc43d;font-size:13px;margin-bottom:6px}.tips li{font-size:12.5px;color:#aab3cf;line-height:1.6;margin:4px 0 4px 16px}</style></head><body><div class="w" id="app"></div>
 <script>
 (function(){
   var DB='https://cinebdbox-default-rtdb.firebaseio.com';
@@ -38,6 +38,7 @@ body{background:#0b0d14 radial-gradient(circle at 50% -10%,#1b2340,transparent 5
     f.style.cssText='border:0;display:block;margin:0 auto;max-width:100%;overflow:hidden';
     f.srcdoc='<html><body style="margin:0;overflow:hidden">'+c+'</body></html>';d.appendChild(f);return d;
   }
+  function tips(){var s=(CFG.tips||'\u09ac\u09bf\u099c\u09cd\u099e\u09be\u09aa\u09a8 \u0995\u09c7\u09a8? \u098f\u0987 \u09b8\u09be\u0987\u099f \u09ab\u09cd\u09b0\u09bf\u0964 \u09ac\u09bf\u099c\u09cd\u099e\u09be\u09aa\u09a8\u09c7\u09b0 \u0986\u09af\u09bc\u09c7 \u09b8\u09be\u09b0\u09cd\u09ad\u09be\u09b0 \u0993 \u09b8\u09be\u0987\u099f \u099a\u09b2\u09c7, \u09a4\u09be\u0987 \u0995\u09af\u09bc\u09c7\u0995 \u09b8\u09c7\u0995\u09c7\u09a8\u09cd\u09a1 \u09a7\u09c8\u09b0\u09cd\u09af \u09a7\u09b0\u09c7 \u0985\u09aa\u09c7\u0995\u09cd\u09b7\u09be \u0995\u09b0\u09c1\u09a8\u0964\n\u09a8\u09a4\u09c1\u09a8 \u099f\u09cd\u09af\u09be\u09ac \u09ac\u09be \u09aa\u09aa\u0986\u09aa \u0996\u09c1\u09b2\u09b2\u09c7 \u09b8\u09c7\u099f\u09be \u09ac\u09a8\u09cd\u09a7 \u0995\u09b0\u09c7 \u0986\u0997\u09c7\u09b0 \u09aa\u09c7\u099c\u09c7 \u09ab\u09bf\u09b0\u09c7 \u0986\u09b8\u09c1\u09a8\u0964 \u0993\u0996\u09be\u09a8\u09c7 \u0995\u09bf\u099b\u09c1 \u0987\u09a8\u09b8\u09cd\u099f\u09b2 \u09ac\u09be \u09b2\u0997\u0987\u09a8 \u0995\u09b0\u09ac\u09c7\u09a8 \u09a8\u09be\u0964\n\u09ad\u09bf\u09a1\u09bf\u0993 \u099a\u09b2\u09b2\u09c7\u0993 \u09b8\u09be\u0989\u09a8\u09cd\u09a1 \u09a8\u09be \u098f\u09b2\u09c7 VLC \u09ac\u09be MX Player \u09a6\u09bf\u09af\u09bc\u09c7 \u099a\u09be\u09b2\u09be\u09a8\u0964').split('\n').filter(function(x){return x.trim()});var d=el('div','tips');d.appendChild(el('b',null,'\u2139 \u099c\u09c7\u09a8\u09c7 \u09b0\u09be\u0996\u09c1\u09a8'));var u=el('ul');s.forEach(function(x){u.appendChild(el('li',null,x))});d.appendChild(u);return d}
   function head(){
     var top=el('div','top');top.appendChild(el('div','lg','▶'));var nm=el('b'),p=(CFG.name||'Cinebdbox').split(' ');
     nm.appendChild(document.createTextNode(p[0]+(p.length>1?' ':'')));if(p.length>1)nm.appendChild(el('i',null,p.slice(1).join(' ')));
@@ -50,7 +51,7 @@ body{background:#0b0d14 radial-gradient(circle at 50% -10%,#1b2340,transparent 5
     var h=el('h1',null,title||'লিংক তৈরি হচ্ছে'),p=el('p',null,'অনুগ্রহ করে অপেক্ষা করুন, পেজ বন্ধ করবেন না।'),big=el('div','big'),bar=el('div','bar'),bi=el('i');bar.appendChild(bi);
     var btn=el('button','btn','');btn.type='button';btn.disabled=true;
     card.appendChild(h);card.appendChild(p);card.appendChild(big);card.appendChild(bar);card.appendChild(btn);app.appendChild(card);
-    app.appendChild(adbox(A,300,250));app.appendChild(adbox(B,320,50));
+    app.appendChild(tips());app.appendChild(adbox(A,300,250));app.appendChild(adbox(B,320,50));
     if(CFG.ads){try{document.body.appendChild(document.createRange().createContextualFragment(POP))}catch(e){}}
     var step=1;
     function timer(sec,label,done){
@@ -66,8 +67,7 @@ body{background:#0b0d14 radial-gradient(circle at 50% -10%,#1b2340,transparent 5
             i2.className='';i3.className='on';big.textContent='✓';h.textContent='লিংক প্রস্তুত!';p.textContent='নিচের বাটনে ক্লিক করুন।';
             btn.disabled=false;btn.textContent='লিংকে যান';
             btn.onclick=function(){
-              try{fetch(DB+'/links/'+code+'/c.json').then(function(r){return r.json()}).then(function(n){
-                fetch(DB+'/links/'+code+'/c.json',{method:'PUT',body:JSON.stringify((+n||0)+1),keepalive:true})}).catch(function(){})}catch(e){}
+              try{fetch(DB+'/links/'+code+'/c.json',{method:'PUT',body:JSON.stringify({'.sv':{'increment':1}}),keepalive:true})}catch(e){}
               location.href=dest;
             };
           });
@@ -77,7 +77,7 @@ body{background:#0b0d14 radial-gradient(circle at 50% -10%,#1b2340,transparent 5
     s1();
   }
   function merge(s){try{var h=s&&s.short;if(!h)return;if(typeof h.name==='string'&&h.name)CFG.name=h.name;
-    if(+h.w1>0)CFG.w1=Math.min(60,+h.w1);if(+h.w2>0)CFG.w2=Math.min(60,+h.w2);if(typeof h.ads==='boolean')CFG.ads=h.ads}catch(e){}}
+    if(+h.w1>0)CFG.w1=Math.min(60,+h.w1);if(+h.w2>0)CFG.w2=Math.min(60,+h.w2);if(typeof h.ads==='boolean')CFG.ads=h.ads;if(typeof h.tips==='string'&&h.tips.trim())CFG.tips=h.tips}catch(e){}}
   if(!code){bad('লিংক পাওয়া যায়নি');return}
   app.textContent='';head();app.appendChild(el('div','card')).appendChild(el('p',null,'...'));
   Promise.all([
