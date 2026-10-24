@@ -247,6 +247,8 @@ async function vSet(){
   <div class="row2">${f('s_tg','Telegram লিংক',s.telegram,'input','https://t.me/...')}${f('s_fb','Facebook লিংক',s.facebook)}</div>
   <div class="row2">${f('s_tk','TikTok লিংক',s.tiktok)}${f('s_em','ইমেইল',s.email)}</div></div>
   <div class="panel"><h3 class="s">ডাউনলোড ও ১৮+</h3><div class="row3">${f('s_wait','কাউন্টডাউন (সেকেন্ড)',s.dlWait,'input','10')}${f('s_pin','১৮+ পিন (খালি = শুধু বয়স টিক)',s.adultPin)}${f('s_allow','অনুমোদিত ডাউনলোড ডোমেইন (কমা দিয়ে)',s.dlAllowed,'input','mega.nz, drive.google.com')}</div>
+  <label class="f">একাধিক ডাউনলোড পেজ</label><div class="row2"><div><select id="s_dm">${[['single','একটাই (ডিফল্ট পেজ)'],['random','র‍্যান্ডম: প্রতিবার যেকোনো একটা'],['chain','চেইন: ১ম → ২য় → ৩য় → আসল লিংক']].map(x=>`<option value="${x[0]}"${(s.dlMode||'single')===x[0]?' selected':''}>${x[1]}</option>`).join('')}</select></div>${f('s_dp','পেজের পথ (কমা দিয়ে)',s.dlPages,'input','/p/download.html, /p/download2.html, /p/download3.html')}</div>
+  <p class="hint">র‍্যান্ডম বা চেইন চালু করার আগে ওই পেজগুলো Blogger-এ বানিয়ে নিন, নইলে ডাউনলোড বাটনে ৪০৪ আসবে।</p>
   <p class="hint">সতর্কতা: পিন ও বিজ্ঞাপন কোড ডেটাবেসে প্রকাশ্য পড়া যায় (থিমের কোডেও তাই ছিল)। ১৮+ লক শুধু বয়স-সতর্কতা।</p></div>
   <div class="panel"><h3 class="s">বিজ্ঞাপন</h3><label class="f" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="s_ads" ${s.adsOn!==false?'checked':''}> বিজ্ঞাপন চালু</label>
   ${f('s_cl','AdSense Publisher ID',s.adsClient,'input','ca-pub-XXXXXXXXXXXXXXXX')}
@@ -261,7 +263,7 @@ async function vSet(){
   $('#bkr').onclick=async()=>{try{const o=JSON.parse($('#bk').value);if(!o||typeof o!=='object'||!confirm('এই সেটিংস দিয়ে বর্তমান সেটিংস বদলে দেবেন?'))return;await set(ref(db,'settings'),o);toast('ফেরানো হয়েছে');vSet()}catch(e){toast('JSON ঠিক নয়: '+(e.message||e),1)}};
   $$('#main textarea[id^=sl_]').forEach(t=>t.style.minHeight='56px');
   $('#sv').onclick=async()=>{
-    const v=id=>$('#'+id).value.trim(),o={notice:v('s_notice'),telegram:v('s_tg'),facebook:v('s_fb'),tiktok:v('s_tk'),email:v('s_em'),adultPin:v('s_pin'),dlWait:Math.max(3,Math.min(60,+v('s_wait')||10)),dlAllowed:v('s_allow'),adsOn:$('#s_ads').checked,adsClient:v('s_cl'),slots:{}};
+    const v=id=>$('#'+id).value.trim(),o={notice:v('s_notice'),telegram:v('s_tg'),facebook:v('s_fb'),tiktok:v('s_tk'),email:v('s_em'),adultPin:v('s_pin'),dlWait:Math.max(3,Math.min(60,+v('s_wait')||10)),dlAllowed:v('s_allow'),dlMode:$('#s_dm').value,dlPages:v('s_dp'),adsOn:$('#s_ads').checked,adsClient:v('s_cl'),slots:{}};
     SLOTS.forEach(x=>o.slots[x[0]]=v('sl_'+x[0]));
     try{await set(ref(db,'settings'),o);toast('সেভ হয়েছে')}catch(e){toast('সেভ হয়নি: '+(e.message||e),1)}
   };
