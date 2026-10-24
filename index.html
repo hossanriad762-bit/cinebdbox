@@ -89,9 +89,21 @@ h3.s{font-size:16px;margin:0 0 12px}
  .main{padding:16px 14px 100px}
  .row2,.row3{grid-template-columns:1fr}
  .dl{grid-template-columns:1fr 1fr}
+ .lk{grid-template-columns:1fr 1fr}.lk small,.lk input:nth-child(4){grid-column:1/-1}
+ .side a{min-width:0;font-size:9.5px!important;overflow:hidden;white-space:nowrap}
  .dl input:nth-child(4){grid-column:1/-1}
  .bars .it{grid-template-columns:minmax(0,1fr) 50px}.bars .it .bar{display:none}
 }
+.pill.dr{background:rgba(255,255,255,.1);color:#cfd3e4}
+.pi .pr{display:flex;gap:10px;align-items:flex-start}
+.pi .pr img,.pi .pr .ph{flex:0 0 auto;width:46px;height:69px;border-radius:8px;object-fit:cover;background:#1a1d2b}
+.pi .sk{margin-top:4px;width:18px;height:18px}
+.pi b{word-break:break-word}
+.bulk{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:10px 12px;margin-bottom:12px;border-radius:14px;background:#1b1e2e;border:1px solid var(--pri);box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.lk{display:grid;grid-template-columns:minmax(0,1fr) 90px 80px minmax(0,2fr);gap:8px;align-items:center;margin-bottom:8px}
+.lk small{color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ed textarea{min-height:360px;font:12.5px/1.5 ui-monospace,Menlo,monospace;white-space:pre;overflow:auto}
+summary{outline:0}
 </style>
 </head>
 <body>
@@ -139,13 +151,14 @@ function showDenied(u){
 }
 
 /* ---------------- shell ---------------- */
-const TABS=[['dash','▦','ড্যাশবোর্ড'],['gen','✎','পোস্ট'],['req','✉','রিকোয়েস্ট'],['rep','⚑','রিপোর্ট'],['set','⚙','সেটিংস']];
+const TABS=[['dash','▦','ড্যাশবোর্ড'],['posts','☰','পোস্ট'],['gen','✎','নতুন পোস্ট'],['pages','❏','পেজ'],['req','✉','রিকোয়েস্ট'],['rep','⚑','রিপোর্ট'],['set','⚙','সেটিংস']];
 let cur='dash';
 function showApp(u){
   app$().innerHTML=`<div class="shell"><nav class="side"><div class="logo">Cine<em>bdbox</em></div>
   ${TABS.map(t=>`<a data-t="${t[0]}"><span>${t[1]}</span>${t[2]}</a>`).join('')}<div class="grow"></div>
   <a class="so" id="so"><span>⏻</span>লগআউট</a></nav><main class="main" id="main"></main></div>`;
   $$('.side a[data-t]').forEach(a=>a.onclick=()=>go(a.dataset.t));
+  if(LS.get('cid'))loadGIS().catch(()=>{});
   $('#so').onclick=()=>signOut(auth);
   go(location.hash.slice(1)||'dash');
 }
@@ -154,7 +167,7 @@ function go(t){
   cur=t;location.hash=t;
   $$('.side a[data-t]').forEach(a=>a.classList.toggle('on',a.dataset.t===t));
   $('#main').innerHTML='<div class="skl"></div><div class="skl"></div>';
-  ({dash:vDash,gen:vGen,req:vReq,rep:vRep,set:vSet}[t])().catch(e=>{$('#main').innerHTML=`<div class="panel"><b>সমস্যা হয়েছে</b><p class="hint">${esc(e.message||e)}</p><p class="hint">Firebase Rules (firebase-rules.json) Publish করা আছে কিনা দেখুন।</p></div>`});
+  ({dash:vDash,posts:vPosts,gen:vGen,pages:vPages,req:vReq,rep:vRep,set:vSet}[t])().catch(e=>{$('#main').innerHTML=`<div class="panel"><b>সমস্যা হয়েছে</b><p class="hint">${esc(e.message||e)}</p><p class="hint">Firebase Rules (firebase-rules.json) Publish করা আছে কিনা দেখুন।</p></div>`});
 }
 
 /* ---------------- dashboard ---------------- */
@@ -174,6 +187,8 @@ async function vDash(){
   <div class="panel bars"><h3 class="s">সবচেয়ে বেশি লাইক</h3>${topL.map(x=>`<div class="it"><span>${esc(tmap[x.k]?.t||x.k)}</span><div class="bar"><i style="width:${Math.max(3,x.c/maxL*100)}%"></i></div><b>${nf(x.c)}</b></div>`).join('')||'<p class="hint">এখনো কোনো লাইক নেই।</p>'}</div>
   <div class="panel"><h3 class="s">ব্লগের ঠিকানা</h3><p class="hint">ড্যাশবোর্ডের লিংকগুলো এই ঠিকানা দিয়ে খুলবে।</p><div style="display:flex;gap:8px;margin-top:8px"><input id="site" value="${esc(siteUrl())}"><button class="btn gl" id="ss">সেভ</button></div></div>`;
   $('#ss').onclick=()=>{LS.set('site',$('#site').value.trim());toast('সেভ হয়েছে')};
+  if(bOn())bapi('blogs/'+BL.bid).then(b=>{const g=$('.grid4');if(g)g.insertAdjacentHTML('afterbegin',`<div class="stat"><b>${nf(b.posts?.totalItems)}</b><span>মোট পোস্ট (Blogger)</span></div><div class="stat"><b>${nf(b.pages?.totalItems)}</b><span>মোট পেজ</span></div>`)}).catch(()=>{});
+  else if(LS.get('cid'))$('.grid4').insertAdjacentHTML('afterend','<div class="panel"><span class="hint">Blogger পরিসংখ্যান ও এডিটের জন্য <a href="#posts" style="text-decoration:underline">পোস্ট ট্যাবে</a> সংযুক্ত হন।</span></div>');
 }
 
 /* ---------------- requests / reports ---------------- */
@@ -187,7 +202,7 @@ async function vReq(){
   const draw=()=>{
     const list=all.filter(x=>reqFilter==='all'||(reqFilter==='done'?x.s==='done':x.s!=='done'));
     $('#rl').innerHTML=list.map(x=>`<div class="item" data-k="${esc(x.k)}"><div class="h"><div><b>${esc(x.m)}</b> ${x.s==='done'?'<span class="pill ok">Done</span>':'<span class="pill">Pending</span>'}<br><small>${esc(x.l||'ভাষা: -')} • ${when(x.ts)}</small>${x.n?`<p style="margin-top:6px;color:#d5d9e8">${esc(x.n)}</p>`:''}</div></div>
-    <div class="acts"><button class="btn gl sm" data-a="copy">নাম কপি</button><button class="btn ${x.s==='done'?'gl':'ok'} sm" data-a="${x.s==='done'?'undo':'done'}">${x.s==='done'?'আবার পেন্ডিং':'Done করুন'}</button><button class="btn red sm" data-a="del">মুছুন</button></div></div>`).join('')||'<p class="hint">কিছু নেই।</p>';
+    <div class="acts"><button class="btn gl sm" data-a="copy">নাম কপি</button><button class="btn sm" data-a="mk">পোস্ট বানান</button><button class="btn ${x.s==='done'?'gl':'ok'} sm" data-a="${x.s==='done'?'undo':'done'}">${x.s==='done'?'আবার পেন্ডিং':'Done করুন'}</button><button class="btn red sm" data-a="del">মুছুন</button></div></div>`).join('')||'<p class="hint">কিছু নেই।</p>';
   };
   $('#main').innerHTML=`<h2 class="t">রিকোয়েস্ট ইনবক্স</h2><div class="tabs">${[['pending','পেন্ডিং'],['done','Done'],['all','সব']].map(t=>`<button data-f="${t[0]}" class="${reqFilter===t[0]?'on':''}">${t[1]}</button>`).join('')}</div><div id="rl"></div>`;
   draw();
@@ -197,6 +212,7 @@ async function vReq(){
     const k=b.closest('.item').dataset.k,x=all.find(i=>i.k===k);
     try{
       if(b.dataset.a==='copy')return copy(x.m);
+      if(b.dataset.a==='mk'){LS.set('prefq',x.m);return go('gen')}
       if(b.dataset.a==='del'){if(!confirm('মুছে ফেলবেন?'))return;await remove(ref(db,'requests/'+k));all.splice(all.indexOf(x),1)}
       else{await update(ref(db,'requests/'+k),{s:b.dataset.a==='done'?'done':'pending'});x.s=b.dataset.a==='done'?'done':'pending'}
       draw();
@@ -206,11 +222,16 @@ async function vReq(){
 async function vRep(){
   const all=await loadList('reports');
   const draw=()=>{$('#rl').innerHTML=all.map(x=>`<div class="item" data-k="${esc(x.k)}"><b>${esc(x.t||x.u)}</b><br><small>${when(x.ts)} • <a href="${esc(siteUrl()+(x.u||''))}" target="_blank" rel="noopener">পোস্ট খুলুন</a></small>
-    <div class="acts"><button class="btn ok sm" data-a="fix">ঠিক করেছি (মুছুন)</button></div></div>`).join('')||'<p class="hint">কোনো রিপোর্ট নেই।</p>'};
+    <div class="acts"><button class="btn sm" data-a="edit">পোস্ট এডিট করুন</button><button class="btn ok sm" data-a="fix">ঠিক করেছি (মুছুন)</button></div></div>`).join('')||'<p class="hint">কোনো রিপোর্ট নেই।</p>'};
   $('#main').innerHTML=`<h2 class="t">ব্রোকেন লিংক রিপোর্ট</h2><div id="rl"></div>`;draw();
   $('#main').onclick=async e=>{
     const b=e.target.closest('[data-a]');if(!b)return;
     const k=b.closest('.item').dataset.k;
+    if(b.dataset.a==='edit'){
+      const x=all.find(i=>i.k===k);
+      try{if(!bOn())await bConnect();const j=await bapi(bb('posts/bypath'),{q:{path:x.u}});return openEdit('post',j.id,'rep')}
+      catch(err){return toast('পোস্ট পাওয়া যায়নি: '+(err.message||err),1)}
+    }
     try{await remove(ref(db,'reports/'+k));all.splice(all.findIndex(i=>i.k===k),1);draw()}catch(err){toast('হয়নি: '+(err.message||err),1)}
   };
 }
@@ -231,7 +252,13 @@ async function vSet(){
   ${f('s_cl','AdSense Publisher ID',s.adsClient,'input','ca-pub-XXXXXXXXXXXXXXXX')}
   <p class="hint">প্রতিটি স্লটে AdSense Ad-slot আইডি (শুধু সংখ্যা) অথবা যেকোনো নেটওয়ার্কের HTML/স্ক্রিপ্ট কোড দিন। খালি স্লটে কিছু দেখায় না।</p>
   ${SLOTS.map(x=>f('sl_'+x[0],x[1]+' <small>('+x[0]+')</small>',sl[x[0]],'area')).join('')}</div>
-  <button class="btn" id="sv">সেভ করুন</button>`;
+  <button class="btn" id="sv">সেভ করুন</button>
+  <div class="panel" style="margin-top:18px"><h3 class="s">Blogger সংযোগ</h3>${connForm()}</div>
+  <div class="panel"><h3 class="s">ব্যাকআপ (সেটিংস)</h3><p class="hint">বিজ্ঞাপন কোড ও নোটিশ হারিয়ে গেলে ফেরাতে। কপি করে কোথাও রেখে দিন, দরকারে নিচে পেস্ট করে "ফেরান" চাপুন।</p>
+  <textarea id="bk" style="min-height:90px;font:12px monospace"></textarea><div style="display:flex;gap:8px;margin-top:8px"><button class="btn gl" id="bkc">বর্তমান সেটিংস কপি</button><button class="btn gl" id="bkr">পেস্ট করা সেটিংস ফেরান</button></div></div>`;
+  bindConn();
+  $('#bkc').onclick=async()=>{const j=JSON.stringify((await get(ref(db,'settings'))).val()||{},null,1);$('#bk').value=j;copy(j)};
+  $('#bkr').onclick=async()=>{try{const o=JSON.parse($('#bk').value);if(!o||typeof o!=='object'||!confirm('এই সেটিংস দিয়ে বর্তমান সেটিংস বদলে দেবেন?'))return;await set(ref(db,'settings'),o);toast('ফেরানো হয়েছে');vSet()}catch(e){toast('JSON ঠিক নয়: '+(e.message||e),1)}};
   $$('#main textarea[id^=sl_]').forEach(t=>t.style.minHeight='56px');
   $('#sv').onclick=async()=>{
     const v=id=>$('#'+id).value.trim(),o={notice:v('s_notice'),telegram:v('s_tg'),facebook:v('s_fb'),tiktok:v('s_tk'),email:v('s_em'),adultPin:v('s_pin'),dlWait:Math.max(3,Math.min(60,+v('s_wait')||10)),dlAllowed:v('s_allow'),adsOn:$('#s_ads').checked,adsClient:v('s_cl'),slots:{}};
@@ -275,12 +302,12 @@ async function vGen(){
     <label class="f">HTML (Blogger → HTML view-তে পেস্ট করুন)</label><textarea id="o_html" readonly></textarea>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn" data-c="o_html">HTML কপি</button><button class="btn gl" id="pv">প্রিভিউ (কাঁচা HTML)</button></div>
     <p class="hint">পোস্ট করার পর Blogger এডিটরে টাইটেল ও লেবেল বসান। পোস্টারের লিংক TMDB-র হলে থিম নিজে কার্ডের থাম্বনেইল দেখিয়ে নেয়।</p></div>
-  <div class="panel"><h3 class="s">ঐচ্ছিক: সরাসরি Blogger-এ ড্রাফট পাঠান</h3>
-    <p class="hint">Blogger API ও Google OAuth Client ID লাগে (গাইডে ধাপ আছে)। না চাইলে বাদ দিন, কপি-পেস্টই যথেষ্ট।</p>
-    <div class="row2">${inp('b_id','Blog ID','',LS.get('bid'))}${inp('b_cid','OAuth Client ID','xxxx.apps.googleusercontent.com',LS.get('cid'))}</div>
+  <div class="panel"><h3 class="s">সরাসরি Blogger-এ পাঠান</h3>
+    <p class="hint">টাইটেল, লেবেল ও HTML একসাথে পোস্ট হয়ে যাবে। প্রথমবার "পোস্ট" ট্যাবে গিয়ে Google-এ সংযুক্ত হতে হবে।</p>
     <label class="f" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="b_pub"> ড্রাফট না, সরাসরি পাবলিশ করুন</label>
-    <button class="btn gl" id="bp" style="margin-top:8px">Blogger-এ পাঠান</button><div class="hint" id="bm"></div></div>`;
+    <button class="btn" id="bp" style="margin-top:8px">Blogger-এ পাঠান</button><div class="hint" id="bm"></div></div>`;
   bindGen();renderLists();build();
+  {const pq=LS.get('prefq');if(pq){LS.set('prefq','');$('#gq').value=pq;if(LS.get('tmdb'))$('#gs').click()}}
 }
 
 function renderLists(){
@@ -387,17 +414,15 @@ async function pick(id,type){
 
 async function loadGIS(){if(window.google?.accounts?.oauth2)return;await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.onload=res;s.onerror=()=>rej(new Error('Google লাইব্রেরি লোড হয়নি'));document.head.appendChild(s)})}
 async function publishBlogger(){
-  const bid=val('b_id'),cid=val('b_cid'),m=$('#bm');
-  if(!bid||!cid){m.textContent='Blog ID ও Client ID দিন';return}
-  LS.set('bid',bid);LS.set('cid',cid);m.textContent='Google অনুমতি চাওয়া হচ্ছে...';
+  const m=$('#bm');
+  if(!val('o_title')||!$('#o_html').value){m.textContent='আগে তথ্য দিয়ে পোস্ট তৈরি করুন';return}
   try{
-    await loadGIS();
-    const token=await new Promise((res,rej)=>{const tc=google.accounts.oauth2.initTokenClient({client_id:cid,scope:'https://www.googleapis.com/auth/blogger',callback:r=>r.error?rej(new Error(r.error)):res(r.access_token)});tc.requestAccessToken()});
-    const body={kind:'blogger#post',title:val('o_title'),content:$('#o_html').value,labels:val('o_labels').split(',').map(x=>x.trim()).filter(Boolean)};
-    const r=await fetch(`https://www.googleapis.com/blogger/v3/blogs/${encodeURIComponent(bid)}/posts?isDraft=${!$('#b_pub').checked}`,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body)});
-    const j=await r.json();
-    if(!r.ok)throw new Error(j.error?.message||('ত্রুটি '+r.status));
-    m.innerHTML='হয়েছে! '+(j.url?`<a href="${esc(j.url)}" target="_blank" rel="noopener">পোস্ট খুলুন</a>`:'');
+    if(!bOn()){m.textContent='Google অনুমতি চাওয়া হচ্ছে...';await bConnect()}
+    m.textContent='পাঠানো হচ্ছে...';
+    const body={kind:'blogger#post',title:val('o_title'),content:$('#o_html').value,labels:splitL($('#o_labels').value)};
+    const j=await bapi(bb('posts'),{method:'POST',q:{isDraft:!$('#b_pub').checked},body});
+    LABELS=null;m.innerHTML='হয়েছে! '+(j.status==='LIVE'&&j.url?`<a href="${esc(j.url)}" target="_blank" rel="noopener">পোস্ট খুলুন</a> • `:'(Draft) ')+`<a href="#" id="b_ed" style="text-decoration:underline">এডিট করুন</a>`;
+    $('#b_ed').onclick=e=>{e.preventDefault();openEdit('post',j.id,'gen')};
   }catch(e){m.textContent='হয়নি: '+(e.message||e)}
 }
 
@@ -434,6 +459,252 @@ function bindGen(){
   m.onchange=e=>{if(e.target.matches('input[type=checkbox],select'))build()};
 }
 
+/* ---------------- Blogger API (shared) ---------------- */
+const BL={token:'',exp:0,bid:LS.get('bid')};
+const BAPI='https://www.googleapis.com/blogger/v3/';
+const bOn=()=>!!BL.token&&Date.now()<BL.exp-30000;
+async function bConnect(){
+  const cid=LS.get('cid');if(!cid)throw new Error('আগে OAuth Client ID সেভ করুন');
+  await loadGIS();
+  const r=await new Promise((res,rej)=>{
+    const tc=google.accounts.oauth2.initTokenClient({client_id:cid,scope:'https://www.googleapis.com/auth/blogger',
+      callback:x=>x.error?rej(new Error(x.error_description||x.error)):res(x),
+      error_callback:x=>rej(new Error(x.type==='popup_closed'?'Google উইন্ডো বন্ধ হয়েছে':(x.message||x.type||'Google ত্রুটি')))});
+    tc.requestAccessToken();
+  });
+  BL.token=r.access_token;BL.exp=Date.now()+(+r.expires_in||3600)*1000;
+  if(!BL.bid){const b=await bapi('blogs/byurl',{q:{url:siteUrl()+'/'}});BL.bid=b.id;LS.set('bid',b.id)}
+  return true;
+}
+async function bapi(path,o={}){
+  if(!bOn())throw Object.assign(new Error('Blogger-এ সংযুক্ত নন, আবার সংযুক্ত হন'),{need:1});
+  const u=new URL(BAPI+path);
+  Object.entries(o.q||{}).forEach(([k,v])=>(Array.isArray(v)?v:[v]).forEach(x=>{if(x!==''&&x!=null)u.searchParams.append(k,x)}));
+  const r=await fetch(u,{method:o.method||'GET',headers:{Authorization:'Bearer '+BL.token,...(o.body?{'Content-Type':'application/json'}:{})},body:o.body?JSON.stringify(o.body):undefined});
+  if(r.status===204)return {};
+  const j=await r.json().catch(()=>({}));
+  if(r.status===401){BL.token='';throw Object.assign(new Error('সেশন শেষ, আবার সংযুক্ত হন'),{need:1})}
+  if(!r.ok)throw new Error(j.error?.message||('ত্রুটি '+r.status));
+  return j;
+}
+const bb=p=>`blogs/${BL.bid}/${p}`;
+const thumb=u=>u?u.replace(/\/s\d+(-c)?\//,'/w92-h138-c/').replace(/^http:/,'https:'):'';
+const stPill=s=>{s=(s||'').toUpperCase();return `<span class="pill ${s==='LIVE'?'ok':s==='DRAFT'?'dr':''}">${s==='LIVE'?'Live':s==='DRAFT'?'Draft':s==='SCHEDULED'?'Scheduled':esc(s||'-')}</span>`};
+const fix=m=>m.need?'':m;
+
+function connForm(){
+  return `<div id="cf"><p class="hint" style="margin-bottom:8px">পোস্ট এডিট, ডিলিট ও সরাসরি পাবলিশ করতে Blogger API-র অনুমতি লাগে। একবার সেটআপ করলেই হবে।</p>
+  <details class="item"><summary style="cursor:pointer;font-weight:600">সেটআপের ধাপ (একবারের কাজ)</summary><ol class="hint" style="padding-left:20px;line-height:1.9;margin-top:8px">
+   <li>console.cloud.google.com খুলুন (Chrome → Desktop site), উপরে প্রজেক্ট বেছে নিন: <b>cinebdbox</b> (Firebase-এর একই প্রজেক্ট)।</li>
+   <li>বাঁ মেনু → <b>APIs &amp; Services → Library</b> → "Blogger API v3" খুঁজে <b>Enable</b>।</li>
+   <li><b>OAuth consent screen</b> (বা Google Auth Platform) → Get started → App name: Cinebdbox, ইমেইল দিন → Audience: <b>External</b> → শেষ করুন। তারপর <b>Audience → Test users → Add users</b> এ আপনার নিজের Gmail যোগ করুন।</li>
+   <li><b>Credentials → Create credentials → OAuth client ID</b> → Application type: <b>Web application</b> → <b>Authorized JavaScript origins</b> এ দিন: <b>${esc(location.origin)}</b> → Create।</li>
+   <li>যে <b>Client ID</b> (…apps.googleusercontent.com) পাবেন, নিচে বসান।</li></ol></details>
+  <label class="f">OAuth Client ID</label><input id="cid_in" value="${esc(LS.get('cid'))}" placeholder="xxxx.apps.googleusercontent.com">
+  <label class="f">ব্লগের ঠিকানা</label><input id="site_in" value="${esc(siteUrl())}">
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn" id="cid_go">Google দিয়ে সংযুক্ত হন</button></div><div class="hint" id="cid_msg">${bOn()?'সংযুক্ত আছেন।':''}</div></div>`;
+}
+function bindConn(onOk){
+  $('#cid_go').onclick=async()=>{
+    const c=$('#cid_in').value.trim(),s=$('#site_in').value.trim().replace(/\/+$/,'');
+    if(!c)return $('#cid_msg').textContent='Client ID দিন';
+    if(c!==LS.get('cid')||s!==siteUrl()){BL.bid='';LS.set('bid','')}
+    LS.set('cid',c);LS.set('site',s);$('#cid_msg').textContent='Google অনুমতি চাওয়া হচ্ছে...';
+    try{await bConnect();$('#cid_msg').textContent='সংযুক্ত হয়েছে';toast('Blogger-এ সংযুক্ত');onOk&&onOk()}
+    catch(e){$('#cid_msg').textContent='হয়নি: '+(e.message||e)}
+  };
+}
+function renderConn(title,onOk){
+  $('#main').innerHTML=`<h2 class="t">${esc(title)}</h2><div class="panel"><h3 class="s">Blogger সংযোগ</h3>${connForm()}</div>`;
+  bindConn(onOk);
+}
+const errBox=e=>`<div class="panel"><b>সমস্যা হয়েছে</b><p class="hint">${esc(e.message||e)}</p></div>`;
+
+/* ---- label helpers ---- */
+const splitL=s=>[...new Set((s||'').split(',').map(x=>x.trim()).filter(Boolean))];
+let LABELS=null;
+async function loadLabels(){
+  if(LABELS)return LABELS;
+  try{const j=await (await fetch(siteUrl()+'/feeds/posts/summary?alt=json&max-results=0')).json();LABELS=(j.feed.category||[]).map(c=>c.term).sort()}catch{LABELS=[]}
+  return LABELS;
+}
+const dl=()=>`<datalist id="lbl">${(LABELS||[]).map(l=>`<option value="${esc(l)}">`).join('')}</datalist>`;
+
+/* ---------------- posts manager ---------------- */
+const PS={q:'',st:'ALL',label:'',items:[],next:'',sel:new Set()};
+async function vPosts(){
+  if(!bOn())return renderConn('পোস্ট ম্যানেজার',vPosts);
+  await loadLabels();
+  $('#main').innerHTML=`<h2 class="t">পোস্ট ম্যানেজার</h2>${dl()}
+  <div class="panel"><div style="display:flex;gap:8px"><input id="pq" placeholder="পোস্টের নাম দিয়ে খুঁজুন" value="${esc(PS.q)}"><button class="btn" id="pgo">খুঁজুন</button></div>
+   <div class="row2"><div><label class="f">অবস্থা</label><select id="pst">${[['ALL','সব'],['LIVE','Live'],['DRAFT','Draft'],['SCHEDULED','Scheduled']].map(x=>`<option value="${x[0]}"${PS.st===x[0]?' selected':''}>${x[1]}</option>`).join('')}</select></div>
+   <div><label class="f">লেবেল ফিল্টার</label><input id="plb" list="lbl" value="${esc(PS.label)}" placeholder="যেমন: Trending"></div></div></div>
+  <div id="pbulk"></div><div id="pl"></div><div id="pm" style="text-align:center;margin:10px 0"></div>
+  <details class="panel" id="lt"><summary style="cursor:pointer;font-weight:600">লেবেল টুলস (সব পোস্টে একসাথে)</summary>
+   <p class="hint" style="margin:8px 0">কোনো লেবেলের নাম বদলান বা সব পোস্ট থেকে সরান। নতুন নাম খালি রাখলে লেবেল সরে যাবে।</p>
+   <div class="row2"><div><label class="f">পুরনো লেবেল</label><input id="lo" list="lbl"></div><div><label class="f">নতুন নাম (খালি = সরান)</label><input id="ln" list="lbl"></div></div>
+   <button class="btn gl" id="lgo" style="margin-top:10px">প্রয়োগ করুন</button><div class="hint" id="lmsg"></div></details>`;
+  const go1=()=>{PS.q=$('#pq').value.trim();PS.st=$('#pst').value;PS.label=$('#plb').value.trim();PS.items=[];PS.next='';PS.sel.clear();loadPosts()};
+  $('#pgo').onclick=go1;$('#pq').onkeydown=e=>{if(e.key==='Enter')go1()};$('#pst').onchange=go1;$('#plb').onchange=go1;
+  $('#lgo').onclick=relabel;
+  $('#main').onclick=postsClick;
+  PS.items=[];PS.next='';PS.sel.clear();loadPosts();
+}
+async function loadPosts(){
+  const m=$('#pm');if(!m)return;m.innerHTML='<span class="hint">লোড হচ্ছে...</span>';
+  try{
+    let j;
+    if(PS.q){j=await bapi(bb('posts/search'),{q:{q:PS.q,fetchBodies:false,orderBy:'published'}});PS.next=''}
+    else{j=await bapi(bb('posts'),{q:{maxResults:20,fetchBodies:false,fetchImages:true,orderBy:'updated',view:'ADMIN',status:PS.st==='ALL'?['live','draft','scheduled']:PS.st.toLowerCase(),labels:PS.label,pageToken:PS.next}});PS.next=j.nextPageToken||''}
+    PS.items.push(...(j.items||[]));
+    drawPosts();
+    m.innerHTML=PS.next?'<button class="btn gl" id="pmore">আরও দেখান</button>':(PS.items.length?'<span class="hint">সব দেখানো হয়েছে</span>':'');
+    const mo=$('#pmore');if(mo)mo.onclick=loadPosts;
+  }catch(e){if(e.need){BL.token='';return renderConn('পোস্ট ম্যানেজার',vPosts)}m.innerHTML='';$('#pl').innerHTML=errBox(e)}
+}
+function drawPosts(){
+  $('#pl').innerHTML=PS.items.map(p=>`<div class="item pi" data-id="${esc(p.id)}"><div class="pr"><input type="checkbox" class="sk" ${PS.sel.has(p.id)?'checked':''}>${p.images&&p.images[0]?`<img loading="lazy" alt="" src="${esc(thumb(p.images[0].url))}">`:'<div class="ph"></div>'}
+   <div style="flex:1;min-width:0"><b>${esc(p.title||'(শিরোনামহীন)')}</b> ${stPill(p.status)}<br><small>${when(p.updated||p.published)}${(p.labels||[]).length?' • '+esc((p.labels||[]).slice(0,6).join(', ')):''}</small></div></div>
+   <div class="acts"><button class="btn gl sm" data-a="edit">এডিট</button>${p.url&&(p.status||'').toUpperCase()==='LIVE'?`<a class="btn gl sm" href="${esc(p.url)}" target="_blank" rel="noopener">দেখুন</a>`:''}<button class="btn ${(p.status||'').toUpperCase()==='LIVE'?'gl':'ok'} sm" data-a="tog">${(p.status||'').toUpperCase()==='LIVE'?'Draft-এ নিন':'পাবলিশ'}</button><button class="btn red sm" data-a="del">ডিলিট</button></div></div>`).join('')||'<p class="hint">কোনো পোস্ট পাওয়া যায়নি।</p>';
+  drawBulk();
+}
+function drawBulk(){
+  const n=PS.sel.size,b=$('#pbulk');if(!b)return;
+  b.innerHTML=n?`<div class="bulk"><b>${n}টি নির্বাচিত</b><button class="btn gl sm" data-b="addl">লেবেল যোগ</button><button class="btn gl sm" data-b="rml">লেবেল সরান</button><button class="btn gl sm" data-b="draft">Draft</button><button class="btn red sm" data-b="del">ডিলিট</button><button class="btn gl sm" data-b="clr">বাতিল</button></div>`:'';
+}
+async function postsClick(e){
+  const bk=e.target.closest('[data-b]');
+  if(bk)return bulk(bk.dataset.b);
+  const ck=e.target.closest('.sk');
+  if(ck){const id=ck.closest('.pi').dataset.id;ck.checked?PS.sel.add(id):PS.sel.delete(id);return drawBulk()}
+  const a=e.target.closest('.pi [data-a]');if(!a)return;
+  const id=a.closest('.pi').dataset.id,p=PS.items.find(x=>x.id===id);
+  try{
+    if(a.dataset.a==='edit')return openEdit('post',id,'posts');
+    if(a.dataset.a==='del'){if(!confirm('ডিলিট করবেন? "'+(p.title||'')+'"\nএটা ফেরানো যাবে না।'))return;await bapi(bb('posts/'+id),{method:'DELETE'});PS.items=PS.items.filter(x=>x.id!==id);PS.sel.delete(id);drawPosts();toast('ডিলিট হয়েছে')}
+    if(a.dataset.a==='tog'){const live=(p.status||'').toUpperCase()==='LIVE';const r=await bapi(bb('posts/'+id+(live?'/revert':'/publish')),{method:'POST'});p.status=r.status||(live?'DRAFT':'LIVE');p.url=r.url||p.url;drawPosts();toast(live?'Draft-এ নেওয়া হয়েছে':'পাবলিশ হয়েছে')}
+  }catch(err){if(err.need)return renderConn('পোস্ট ম্যানেজার',vPosts);toast('হয়নি: '+(err.message||err),1)}
+}
+async function bulk(kind){
+  if(kind==='clr'){PS.sel.clear();return drawPosts()}
+  const ids=[...PS.sel],tot=ids.length;if(!tot)return;
+  let lab='';
+  if(kind==='addl'||kind==='rml'){lab=(prompt(kind==='addl'?'কোন লেবেল যোগ করবেন? (কমা দিয়ে একাধিক)':'কোন লেবেল সরাবেন? (কমা দিয়ে একাধিক)')||'').trim();if(!lab)return}
+  if(kind==='del'&&!confirm(tot+'টি পোস্ট ডিলিট করবেন? ফেরানো যাবে না।'))return;
+  if(kind==='draft'&&!confirm(tot+'টি পোস্ট Draft-এ নেবেন? সাইটে আর দেখা যাবে না।'))return;
+  let ok=0,bad=0;const L=splitL(lab);
+  for(const id of ids){
+    toast(`চলছে ${ok+bad+1}/${tot}...`);
+    const p=PS.items.find(x=>x.id===id);
+    try{
+      if(kind==='del'){await bapi(bb('posts/'+id),{method:'DELETE'});PS.items=PS.items.filter(x=>x.id!==id)}
+      else if(kind==='draft'){await bapi(bb('posts/'+id+'/revert'),{method:'POST'});p.status='DRAFT'}
+      else{const nl=kind==='addl'?[...new Set([...(p.labels||[]),...L])]:(p.labels||[]).filter(x=>!L.includes(x));await bapi(bb('posts/'+id),{method:'PATCH',body:{labels:nl}});p.labels=nl}
+      PS.sel.delete(id);ok++;
+    }catch(err){bad++;if(err.need)break}
+  }
+  LABELS=null;drawPosts();toast(`শেষ: ${ok}টি সফল${bad?`, ${bad}টি ব্যর্থ`:''}`,bad?1:0);
+}
+async function relabel(){
+  const o=$('#lo').value.trim(),n=$('#ln').value.trim(),m=$('#lmsg');
+  if(!o)return m.textContent='পুরনো লেবেল দিন';
+  if(!confirm(n?`"${o}" লেবেল বদলে "${n}" করবেন?`:`সব পোস্ট থেকে "${o}" লেবেল সরাবেন?`))return;
+  let tok='',ok=0,bad=0;
+  try{
+    do{
+      const j=await bapi(bb('posts'),{q:{maxResults:50,fetchBodies:false,labels:o,status:['live','draft','scheduled'],view:'ADMIN',pageToken:tok}});
+      tok=j.nextPageToken||'';
+      for(const p of (j.items||[])){
+        m.textContent=`চলছে... ${ok+bad+1}`;
+        try{const nl=[...new Set((p.labels||[]).map(x=>x===o?n:x).filter(Boolean))];await bapi(bb('posts/'+p.id),{method:'PATCH',body:{labels:nl}});ok++}catch{bad++}
+      }
+    }while(tok);
+    LABELS=null;m.textContent=`শেষ: ${ok}টি পোস্ট আপডেট${bad?`, ${bad}টি ব্যর্থ`:''}`;
+  }catch(e){m.textContent='হয়নি: '+(e.message||e)}
+}
+
+/* ---------------- editor (posts + pages) ---------------- */
+const dec=s=>String(s).replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&amp;/g,'&');
+const enc=s=>String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+function getAttr(tag,n){const m=tag.match(new RegExp('\\s'+n+'\\s*=\\s*(?:"([^"]*)"|\'([^\']*)\')','i'));return m?dec(m[1]??m[2]):''}
+function setAttr(tag,n,v){
+  const re=new RegExp('(\\s'+n+'\\s*=\\s*)(?:"[^"]*"|\'[^\']*\')','i');
+  if(re.test(tag))return tag.replace(re,(a,p)=>p+'"'+enc(v)+'"');
+  return tag.replace(/\s*\/?>$/,m=>' '+n+'="'+enc(v)+'"'+m);
+}
+function scanLinks(html){
+  const out=[],re=/<a\b[^>]*?\bdata-dl\b[^>]*>/gi;let m;
+  while((m=re.exec(html))){
+    const end=m.index+m[0].length,close=html.indexOf('</a>',end);
+    out.push({tag:m[0],start:m.index,end,href:getAttr(m[0],'href'),q:getAttr(m[0],'data-q'),s:getAttr(m[0],'data-s'),txt:close>0?html.slice(end,close).replace(/<[^>]*>/g,'').trim():''});
+  }
+  return out;
+}
+async function openEdit(kind,id,back){
+  $('#main').innerHTML='<div class="skl"></div><div class="skl"></div>';$('#main').onclick=null;
+  let d;
+  try{await loadLabels();d=await bapi(bb((kind==='post'?'posts/':'pages/')+id),{q:{view:'ADMIN'}})}
+  catch(e){if(e.need)return renderConn('এডিট',()=>openEdit(kind,id,back));$('#main').innerHTML=errBox(e);return}
+  const isP=kind==='post',live=(d.status||'').toUpperCase()==='LIVE';
+  $('#main').innerHTML=`${dl()}<div style="display:flex;gap:10px;align-items:center;margin-bottom:12px"><button class="btn gl sm" id="eb">← ফিরে যান</button><h2 class="t" style="margin:0;font-size:18px">${isP?'পোস্ট':'পেজ'} এডিট</h2>${stPill(d.status)}</div>
+  <div class="panel"><label class="f">টাইটেল</label><input id="e_title" value="${esc(d.title||'')}">
+  ${isP?`<label class="f">লেবেল (কমা দিয়ে)</label><input id="e_labels" list="lbl" value="${esc((d.labels||[]).join(', '))}"><div class="chk" id="e_chips" style="margin-top:8px">${['Trending','Featured','New Episode','18+'].map(c=>`<button type="button" class="btn sm ${(d.labels||[]).includes(c)?'':'gl'}" data-ch="${c}">${c}</button>`).join('')}</div>`:''}</div>
+  <div class="panel"><h3 class="s">ডাউনলোড লিংক এডিটর</h3><p class="hint" style="margin:-6px 0 8px">ডাউনলোড বাটনের লিংক, কোয়ালিটি ও সাইজ এখানে বদলান। নিচের HTML নিজে থেকে আপডেট হবে।</p><div id="e_links"></div></div>
+  <div class="panel ed"><h3 class="s">HTML</h3><textarea id="e_html" spellcheck="false"></textarea></div>
+  <div class="panel"><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="e_save">সেভ করুন</button>${isP&&!live?'<button class="btn ok" id="e_pub">সেভ ও পাবলিশ</button>':''}${isP&&live?'<button class="btn gl" id="e_draft">Draft-এ নিন</button>':''}${d.url&&live?`<a class="btn gl" href="${esc(d.url)}" target="_blank" rel="noopener">সাইটে দেখুন</a>`:''}<button class="btn red" id="e_del">ডিলিট</button></div><div class="hint" id="e_msg"></div></div>`;
+  const ta=$('#e_html');ta.value=d.content||'';
+  const drawLinks=()=>{
+    const L=scanLinks(ta.value);
+    $('#e_links').innerHTML=L.length?L.map((x,i)=>`<div class="lk" data-i="${i}"><small>${esc(x.txt||('লিংক '+(i+1)))}</small><input data-f="q" placeholder="কোয়ালিটি" value="${esc(x.q)}"><input data-f="s" placeholder="সাইজ" value="${esc(x.s)}"><input data-f="href" placeholder="https://..." value="${esc(x.href)}"></div>`).join(''):'<p class="hint">এই লেখায় data-dl ডাউনলোড বাটন নেই।</p>';
+  };
+  drawLinks();
+  $('#e_links').oninput=e=>{
+    const t=e.target,row=t.closest('.lk');if(!row)return;
+    const L=scanLinks(ta.value),x=L[+row.dataset.i];if(!x)return;
+    const attr={q:'data-q',s:'data-s',href:'href'}[t.dataset.f];
+    ta.value=ta.value.slice(0,x.start)+setAttr(x.tag,attr,t.value.trim())+ta.value.slice(x.end);
+  };
+  ta.onchange=drawLinks;
+  if(isP){
+    $('#e_chips').onclick=e=>{const b=e.target.closest('[data-ch]');if(!b)return;const inp=$('#e_labels'),c=b.dataset.ch,L=splitL(inp.value),i=L.indexOf(c);i>=0?L.splice(i,1):L.push(c);inp.value=L.join(', ');b.classList.toggle('gl',i>=0)};
+    $('#e_labels').oninput=()=>{const L=splitL($('#e_labels').value);$$('#e_chips [data-ch]').forEach(b=>b.classList.toggle('gl',!L.includes(b.dataset.ch)))};
+  }
+  $('#eb').onclick=()=>go(back||(isP?'posts':'pages'));
+  const save=async pub=>{
+    const m=$('#e_msg');m.textContent='সেভ হচ্ছে...';
+    try{
+      const body={title:$('#e_title').value.trim(),content:ta.value};if(isP)body.labels=splitL($('#e_labels').value);
+      await bapi(bb((isP?'posts/':'pages/')+id),{method:'PATCH',body});
+      if(pub)await bapi(bb('posts/'+id+'/publish'),{method:'POST'});
+      LABELS=null;m.textContent='সেভ হয়েছে ✓';toast(pub?'সেভ ও পাবলিশ হয়েছে':'সেভ হয়েছে');if(pub)openEdit(kind,id,back);
+    }catch(e){m.textContent='হয়নি: '+(e.message||e);if(e.need)toast('আবার সংযুক্ত হয়ে সেভ করুন',1)}
+  };
+  $('#e_save').onclick=()=>save(false);
+  if($('#e_pub'))$('#e_pub').onclick=()=>save(true);
+  if($('#e_draft'))$('#e_draft').onclick=async()=>{try{await bapi(bb('posts/'+id+'/revert'),{method:'POST'});toast('Draft-এ নেওয়া হয়েছে');openEdit(kind,id,back)}catch(e){toast('হয়নি: '+(e.message||e),1)}};
+  $('#e_del').onclick=async()=>{
+    if(!confirm('ডিলিট করবেন? "'+(d.title||'')+'"\nএটা ফেরানো যাবে না।'))return;
+    try{await bapi(bb((isP?'posts/':'pages/')+id),{method:'DELETE'});PS.items=PS.items.filter(x=>x.id!==id);toast('ডিলিট হয়েছে');go(back||(isP?'posts':'pages'))}catch(e){toast('হয়নি: '+(e.message||e),1)}
+  };
+}
+
+/* ---------------- pages manager ---------------- */
+async function vPages(){
+  if(!bOn())return renderConn('পেজ ম্যানেজার',vPages);
+  $('#main').innerHTML=`<h2 class="t">পেজ ম্যানেজার</h2><div class="panel" style="display:flex;gap:8px"><input id="np" placeholder="নতুন পেজের নাম"><button class="btn" id="npb">নতুন পেজ</button></div><div id="pgl"><div class="skl"></div></div>`;
+  let items=[];
+  const draw=()=>{$('#pgl').innerHTML=items.map(p=>`<div class="item" data-id="${esc(p.id)}"><div class="h"><div><b>${esc(p.title||'(নামহীন)')}</b> ${stPill(p.status)}<br><small>${esc((p.url||'').replace(/^https?:\/\/[^\/]+/,''))} • ${when(p.updated)}</small></div></div><div class="acts"><button class="btn gl sm" data-a="edit">এডিট</button>${p.url?`<a class="btn gl sm" href="${esc(p.url)}" target="_blank" rel="noopener">দেখুন</a>`:''}<button class="btn red sm" data-a="del">ডিলিট</button></div></div>`).join('')||'<p class="hint">কোনো পেজ নেই।</p>'};
+  try{const j=await bapi(bb('pages'),{q:{fetchBodies:false,status:['live','draft'],view:'ADMIN'}});items=j.items||[];draw()}
+  catch(e){if(e.need)return renderConn('পেজ ম্যানেজার',vPages);$('#pgl').innerHTML=errBox(e);return}
+  $('#npb').onclick=async()=>{const t=$('#np').value.trim();if(!t)return;try{const r=await bapi(bb('pages'),{method:'POST',body:{kind:'blogger#page',title:t,content:''}});openEdit('page',r.id,'pages')}catch(e){toast('হয়নি: '+(e.message||e),1)}};
+  $('#main').onclick=async e=>{
+    const a=e.target.closest('[data-a]');if(!a)return;const id=a.closest('.item').dataset.id,p=items.find(x=>x.id===id);
+    if(a.dataset.a==='edit')return openEdit('page',id,'pages');
+    if(!confirm('"'+(p.title||'')+'" পেজ ডিলিট করবেন?'))return;
+    try{await bapi(bb('pages/'+id),{method:'DELETE'});items=items.filter(x=>x.id!==id);draw();toast('ডিলিট হয়েছে')}catch(err){toast('হয়নি: '+(err.message||err),1)}
+  };
+}
+
 /* ---------------- boot ---------------- */
 onAuthStateChanged(auth,async u=>{
   if(!u)return showLogin();
@@ -442,4 +713,4 @@ onAuthStateChanged(auth,async u=>{
 });
 </script>
 </body>
-  </html>
+</html>
