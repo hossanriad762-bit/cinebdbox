@@ -151,7 +151,7 @@ function showDenied(u){
 }
 
 /* ---------------- shell ---------------- */
-const TABS=[['dash','▦','ড্যাশবোর্ড'],['posts','☰','পোস্ট'],['gen','✎','নতুন পোস্ট'],['pages','❏','পেজ'],['req','✉','রিকোয়েস্ট'],['rep','⚑','রিপোর্ট'],['hub','☁','ডাউনলোড হাব'],['set','⚙','সেটিংস']];
+const TABS=[['dash','▦','ড্যাশবোর্ড'],['posts','☰','পোস্ট'],['gen','✎','নতুন পোস্ট'],['pages','❏','পেজ'],['req','✉','রিকোয়েস্ট'],['rep','⚑','রিপোর্ট'],['hub','☁','ডাউনলোড হাব'],['short','🔗','শর্টনার'],['set','⚙','সেটিংস']];
 let cur='dash';
 function showApp(u){
   app$().innerHTML=`<div class="shell"><nav class="side"><div class="logo">Cine<em>bdbox</em></div>
@@ -167,7 +167,7 @@ function go(t){
   cur=t;location.hash=t;
   $$('.side a[data-t]').forEach(a=>a.classList.toggle('on',a.dataset.t===t));
   $('#main').innerHTML='<div class="skl"></div><div class="skl"></div>';
-  ({dash:vDash,posts:vPosts,gen:vGen,pages:vPages,req:vReq,rep:vRep,hub:vHub,set:vSet}[t])().catch(e=>{$('#main').innerHTML=`<div class="panel"><b>সমস্যা হয়েছে</b><p class="hint">${esc(e.message||e)}</p><p class="hint">Firebase Rules (firebase-rules.json) Publish করা আছে কিনা দেখুন।</p></div>`});
+  ({dash:vDash,posts:vPosts,gen:vGen,pages:vPages,req:vReq,rep:vRep,hub:vHub,short:vShort,set:vSet}[t])().catch(e=>{$('#main').innerHTML=`<div class="panel"><b>সমস্যা হয়েছে</b><p class="hint">${esc(e.message||e)}</p><p class="hint">Firebase Rules (firebase-rules.json) Publish করা আছে কিনা দেখুন।</p></div>`});
 }
 
 /* ---------------- dashboard ---------------- */
@@ -302,6 +302,54 @@ async function vHub(){
     const hub={name:v('h_name'),wait:v('h_wait')===''?5:Math.max(0,Math.min(60,+v('h_wait')||0)),note:v('h_note'),foot:v('h_foot'),tg:v('h_tg'),ads:$('#h_ads').checked,servers,stream:{n:v('h_sn'),u:v('h_su')}};
     try{await update(ref(db,'settings'),{hub,dlHub:hu});toast('সেভ হয়েছে')}catch(e){toast('সেভ হয়নি: '+(e.message||e),1)}
   };
+}
+
+
+/* ---------------- link shortener ---------------- */
+const SBASE='https://hossanriad762-bit.github.io/cinebdbox/go/';
+async function vShort(){
+  const st=(await get(ref(db,'settings'))).val()||{},sh=st.short||{},base=(st.shortBase||SBASE);
+  const ls=(await get(ref(db,'links'))).val()||{};
+  const rows=Object.entries(ls).sort((x,y)=>(y[1].ts||0)-(x[1].ts||0));
+  const f=(id,l,v,ph='')=>`<label class="f" for="${id}">${l}</label><input id="${id}" value="${esc(v==null?'':v)}" placeholder="${esc(ph)}">`;
+  $('#main').innerHTML=`<h2 class="t">লিংক শর্টনার</h2>
+  <p class="hint" style="margin:-8px 0 14px">বড় ডাউনলোড লিংক ছোট করুন। দর্শক ছোট লিংকে ঢুকলে বিজ্ঞাপন ও কাউন্টডাউন দেখে আসল লিংকে যাবে।</p>
+  <div class="panel"><h3 class="s">নতুন ছোট লিংক</h3><label class="f">আসল লিংক (প্রতি লাইনে একটা, একসাথে অনেকগুলো দেওয়া যায়)</label><textarea id="sl_u" style="min-height:90px" placeholder="https://mega.nz/file/..."></textarea>
+  <div class="row2">${f('sl_t','নাম (ঐচ্ছিক, দর্শককে দেখায়)','','Hope (2026) 720p')}${f('sl_c','নিজের কোড (ঐচ্ছিক, শুধু ১টা লিংকে)','','hope720')}</div>
+  <div style="margin-top:12px"><button class="btn" id="sl_go" type="button">ছোট করুন</button></div><div id="sl_out" style="margin-top:12px"></div></div>
+  <div class="panel"><h3 class="s">সেটিংস</h3>${f('sl_base','শর্টনার পেজের ঠিকানা',base)}
+  <div class="row3">${f('sl_nm','সাইটের নাম',sh.name,'Cinebdbox Links')}${f('sl_w1','ধাপ ১ সময় (সেকেন্ড)',sh.w1,'10')}${f('sl_w2','ধাপ ২ সময় (সেকেন্ড)',sh.w2,'8')}</div>
+  <label class="f" style="display:flex;gap:8px;align-items:center;margin-top:10px"><input type="checkbox" id="sl_ads" ${sh.ads!==false?'checked':''}> Adsterra বিজ্ঞাপন চালু</label>
+  <div style="margin-top:10px"><button class="btn gl sm" id="sl_sv" type="button">সেটিংস সেভ</button></div></div>
+  <div class="panel"><h3 class="s">আপনার ছোট লিংক (${rows.length})</h3>${rows.length?rows.map(([k,v])=>`<div class="panel" style="padding:10px;margin-bottom:8px" data-k="${esc(k)}"><div style="font-weight:600">${esc(v.t||k)}</div><div class="hint" style="word-break:break-all">${esc(base+'?c='+k)}</div><div class="hint" style="word-break:break-all">→ ${esc(v.u)}</div><div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap"><span class="hint">ক্লিক: ${v.c||0}</span><button class="btn gl sm cp" type="button">কপি</button><button class="btn red sm dl" type="button">মুছুন</button></div></div>`).join(''):'<p class="hint">এখনো কোনো ছোট লিংক নেই।</p>'}</div>`;
+  const B=()=>($('#sl_base').value.trim()||SBASE);
+  $('#sl_sv').onclick=async()=>{
+    const b=B();if(!/^https:\/\//.test(b)){toast('ঠিকানা https:// দিয়ে শুরু হতে হবে',1);return}
+    const w=id=>Math.max(1,Math.min(60,+$('#'+id).value||0));
+    try{await update(ref(db,'settings'),{shortBase:b,short:{name:$('#sl_nm').value.trim(),w1:w('sl_w1')||10,w2:w('sl_w2')||8,ads:$('#sl_ads').checked}});toast('সেভ হয়েছে')}catch(e){toast('সেভ হয়নি: '+(e.message||e),1)}
+  };
+  const rnd=()=>{const c='abcdefghjkmnpqrstuvwxyz23456789';let s='';for(let i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];return s};
+  $('#sl_go').onclick=async()=>{
+    const urls=$('#sl_u').value.split('\n').map(x=>x.trim()).filter(Boolean),t=$('#sl_t').value.trim(),cc=$('#sl_c').value.trim();
+    if(!urls.length){toast('লিংক দিন',1);return}
+    if(urls.some(u=>!/^https?:\/\//i.test(u))){toast('সব লিংক http/https দিয়ে শুরু হতে হবে',1);return}
+    if(cc&&(urls.length>1||!/^[A-Za-z0-9_-]{3,30}$/.test(cc))){toast('নিজের কোড: ৩–৩০ অক্ষর (ইংরেজি/সংখ্যা/-/_) আর শুধু ১টা লিংকে',1);return}
+    const out=[];
+    try{
+      for(const u of urls){
+        let k=cc||rnd();
+        for(let i=0;i<5&&(await get(ref(db,'links/'+k))).exists();i++){if(cc)throw new Error('এই কোড আগে থেকেই আছে');k=rnd()}
+        await set(ref(db,'links/'+k),{u,t:urls.length===1?t:'',ts:Date.now()});out.push(B()+'?c='+k);
+      }
+      $('#sl_out').innerHTML=`<label class="f">ছোট লিংক</label><textarea id="sl_res" style="min-height:70px">${esc(out.join('\n'))}</textarea><button class="btn gl sm" id="sl_cp" type="button" style="margin-top:8px">কপি</button>`;
+      $('#sl_cp').onclick=()=>copy(out.join('\n'));copy(out.join('\n'));toast('তৈরি হয়েছে, কপি হয়েছে');
+    }catch(e){toast('হয়নি: '+(e.message||e),1)}
+  };
+  $('#main').addEventListener('click',async e=>{
+    const d=e.target.closest('[data-k]');if(!d)return;const k=d.dataset.k;
+    if(e.target.closest('.cp')){copy(B()+'?c='+k);toast('কপি হয়েছে')}
+    if(e.target.closest('.dl')&&confirm('এই ছোট লিংকটা মুছবেন? এটা দেওয়া সব বাটন কাজ করবে না।')){try{await remove(ref(db,'links/'+k));vShort()}catch(er){toast('মোছা যায়নি: '+(er.message||er),1)}}
+  });
 }
 
 /* ---------------- post generator ---------------- */
