@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#0b0d14">
+<title>Link</title>
+<style>
+*{box-sizing:border-box;margin:0}
+body{background:#0b0d14 radial-gradient(circle at 50% -10%,#1b2340,transparent 55%) no-repeat;color:#e9ecf5;font-family:system-ui,-apple-system,"Noto Sans Bengali",sans-serif;padding:14px;min-height:100vh}
+.w{max-width:460px;margin:auto}
+.top{display:flex;align-items:center;gap:10px;margin:6px 0 14px}
+.lg{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#ff3d5a,#ff9a3d);display:grid;place-items:center;font-size:16px}
+.top b{font-size:20px}.top b i{font-style:normal;color:#ffb347}
+.ad{margin:10px auto;text-align:center;overflow:hidden;max-width:100%}
+.card{background:linear-gradient(180deg,#161b2b,#10131d);border:1px solid #232a40;border-radius:18px;padding:22px 18px;text-align:center;box-shadow:0 20px 50px #0008}
+.st{display:flex;justify-content:center;gap:8px;margin-bottom:16px}
+.st i{width:30px;height:6px;border-radius:9px;background:#232a40}.st i.on{background:linear-gradient(90deg,#ff3d5a,#ff9a3d)}
+.card h1{font-size:18px;margin-bottom:6px}.card p{color:#8a93b0;font-size:13px;line-height:1.6}
+.big{font-size:60px;font-weight:800;margin:14px 0 4px;background:linear-gradient(135deg,#ffe29a,#ff9a3d);-webkit-background-clip:text;background-clip:text;color:transparent}
+.bar{height:8px;border-radius:9px;background:#232a40;overflow:hidden;margin:10px 0 6px}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ff3d5a,#ffc43d);transition:width .3s linear}
+.btn{display:block;width:100%;margin-top:16px;padding:14px;border:0;border-radius:13px;font-size:16px;font-weight:700;color:#fff;background:linear-gradient(135deg,#22c55e,#15803d);text-decoration:none!important;box-shadow:0 8px 20px #0007;cursor:pointer}
+.btn[disabled]{opacity:.4;pointer-events:none;background:#2a3047}
+.hid{display:none}
+.bad{padding:10px}.bad a{display:inline-block;margin-top:14px;color:#ffc43d}
+</style></head><body><div class="w" id="app"></div>
+<script>
+(function(){
+  var DB='https://cinebdbox-default-rtdb.firebaseio.com';
+  var CFG={name:'Cinebdbox Links',w1:10,w2:8,ads:true};
+  var A='<script>atOptions={"key":"01079e2d58c6e709fbae2e6136c7929c","format":"iframe","height":250,"width":300,"params":{}};<\/script><script src="https://www.highrevenueformat.com/01079e2d58c6e709fbae2e6136c7929c/invoke.js"><\/script>';
+  var B='<script>atOptions={"key":"1d75a8b837bfff6a11b35284e16ab2a2","format":"iframe","height":50,"width":320,"params":{}};<\/script><script src="https://www.highrevenueformat.com/1d75a8b837bfff6a11b35284e16ab2a2/invoke.js"><\/script>';
+  var POP='<script data-cfasync="false" src="https://aarems.org/1/57290f8d04494e0e30d104b7087e3a2f"><\/script>';
+  var $=function(s,r){return (r||document).querySelector(s)};
+  function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+  var app=$('#app');
+  var code=(new URLSearchParams(location.search).get('c')||location.hash.replace('#','')||'').replace(/[^\w-]/g,'').slice(0,40);
+  function adbox(c,w,h){
+    if(!CFG.ads)return el('div');
+    var d=el('div','ad'),f=document.createElement('iframe');f.width=w;f.height=h;f.setAttribute('scrolling','no');f.setAttribute('frameborder','0');
+    f.style.cssText='border:0;display:block;margin:0 auto;max-width:100%;overflow:hidden';
+    f.srcdoc='<html><body style="margin:0;overflow:hidden">'+c+'</body></html>';d.appendChild(f);return d;
+  }
+  function head(){
+    var top=el('div','top');top.appendChild(el('div','lg','▶'));var nm=el('b'),p=(CFG.name||'Cinebdbox').split(' ');
+    nm.appendChild(document.createTextNode(p[0]+(p.length>1?' ':'')));if(p.length>1)nm.appendChild(el('i',null,p.slice(1).join(' ')));
+    top.appendChild(nm);app.appendChild(top);document.title=CFG.name;
+  }
+  function bad(m){app.textContent='';head();var c=el('div','card bad');c.appendChild(el('h1',null,m));c.appendChild(el('p',null,'লিংকটি ভুল, মুছে ফেলা হয়েছে বা মেয়াদোত্তীর্ণ।'));app.appendChild(c)}
+  function run(dest,title){
+    app.textContent='';head();app.appendChild(adbox(B,320,50));
+    var card=el('div','card'),st=el('div','st'),i1=el('i','on'),i2=el('i'),i3=el('i');st.appendChild(i1);st.appendChild(i2);st.appendChild(i3);card.appendChild(st);
+    var h=el('h1',null,title||'লিংক তৈরি হচ্ছে'),p=el('p',null,'অনুগ্রহ করে অপেক্ষা করুন, পেজ বন্ধ করবেন না।'),big=el('div','big'),bar=el('div','bar'),bi=el('i');bar.appendChild(bi);
+    var btn=el('button','btn','');btn.type='button';btn.disabled=true;
+    card.appendChild(h);card.appendChild(p);card.appendChild(big);card.appendChild(bar);card.appendChild(btn);app.appendChild(card);
+    app.appendChild(adbox(A,300,250));app.appendChild(adbox(B,320,50));
+    if(CFG.ads){try{document.body.appendChild(document.createRange().createContextualFragment(POP))}catch(e){}}
+    var step=1;
+    function timer(sec,label,done){
+      var left=sec,tot=sec;big.textContent=left;bi.style.width='0';btn.disabled=true;btn.textContent=label;
+      var iv=setInterval(function(){left--;big.textContent=Math.max(0,left);bi.style.width=((tot-left)/tot*100)+'%';
+        if(left<=0){clearInterval(iv);done()}},1000);
+    }
+    function s1(){
+      timer(Math.max(1,+CFG.w1||10),'অপেক্ষা করুন...',function(){
+        big.textContent='✓';btn.disabled=false;btn.textContent='পরের ধাপে যান';
+        btn.onclick=function(){step=2;i1.className='';i2.className='on';h.textContent='শেষ ধাপ';
+          timer(Math.max(1,+CFG.w2||8),'অপেক্ষা করুন...',function(){
+            i2.className='';i3.className='on';big.textContent='✓';h.textContent='লিংক প্রস্তুত!';p.textContent='নিচের বাটনে ক্লিক করুন।';
+            btn.disabled=false;btn.textContent='লিংকে যান';
+            btn.onclick=function(){
+              try{fetch(DB+'/links/'+code+'/c.json').then(function(r){return r.json()}).then(function(n){
+                fetch(DB+'/links/'+code+'/c.json',{method:'PUT',body:JSON.stringify((+n||0)+1),keepalive:true})}).catch(function(){})}catch(e){}
+              location.href=dest;
+            };
+          });
+        };
+      });
+    }
+    s1();
+  }
+  function merge(s){try{var h=s&&s.short;if(!h)return;if(typeof h.name==='string'&&h.name)CFG.name=h.name;
+    if(+h.w1>0)CFG.w1=Math.min(60,+h.w1);if(+h.w2>0)CFG.w2=Math.min(60,+h.w2);if(typeof h.ads==='boolean')CFG.ads=h.ads}catch(e){}}
+  if(!code){bad('লিংক পাওয়া যায়নি');return}
+  app.textContent='';head();app.appendChild(el('div','card')).appendChild(el('p',null,'...'));
+  Promise.all([
+    fetch(DB+'/settings.json').then(function(r){return r.json()}).catch(function(){return null}),
+    fetch(DB+'/links/'+code+'.json').then(function(r){return r.json()})
+  ]).then(function(a){
+    merge(a[0]);var l=a[1];
+    if(!l||typeof l.u!=='string'||!/^https?:\/\//i.test(l.u)){bad('লিংক পাওয়া যায়নি');return}
+    run(l.u,l.t||'');
+  }).catch(function(){bad('সংযোগ সমস্যা')});
+})();
+</script></body></html>
