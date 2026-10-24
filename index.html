@@ -151,7 +151,7 @@ function showDenied(u){
 }
 
 /* ---------------- shell ---------------- */
-const TABS=[['dash','▦','ড্যাশবোর্ড'],['posts','☰','পোস্ট'],['gen','✎','নতুন পোস্ট'],['pages','❏','পেজ'],['req','✉','রিকোয়েস্ট'],['rep','⚑','রিপোর্ট'],['set','⚙','সেটিংস']];
+const TABS=[['dash','▦','ড্যাশবোর্ড'],['posts','☰','পোস্ট'],['gen','✎','নতুন পোস্ট'],['pages','❏','পেজ'],['req','✉','রিকোয়েস্ট'],['rep','⚑','রিপোর্ট'],['hub','☁','ডাউনলোড হাব'],['set','⚙','সেটিংস']];
 let cur='dash';
 function showApp(u){
   app$().innerHTML=`<div class="shell"><nav class="side"><div class="logo">Cine<em>bdbox</em></div>
@@ -167,7 +167,7 @@ function go(t){
   cur=t;location.hash=t;
   $$('.side a[data-t]').forEach(a=>a.classList.toggle('on',a.dataset.t===t));
   $('#main').innerHTML='<div class="skl"></div><div class="skl"></div>';
-  ({dash:vDash,posts:vPosts,gen:vGen,pages:vPages,req:vReq,rep:vRep,set:vSet}[t])().catch(e=>{$('#main').innerHTML=`<div class="panel"><b>সমস্যা হয়েছে</b><p class="hint">${esc(e.message||e)}</p><p class="hint">Firebase Rules (firebase-rules.json) Publish করা আছে কিনা দেখুন।</p></div>`});
+  ({dash:vDash,posts:vPosts,gen:vGen,pages:vPages,req:vReq,rep:vRep,hub:vHub,set:vSet}[t])().catch(e=>{$('#main').innerHTML=`<div class="panel"><b>সমস্যা হয়েছে</b><p class="hint">${esc(e.message||e)}</p><p class="hint">Firebase Rules (firebase-rules.json) Publish করা আছে কিনা দেখুন।</p></div>`});
 }
 
 /* ---------------- dashboard ---------------- */
@@ -265,7 +265,42 @@ async function vSet(){
   $('#sv').onclick=async()=>{
     const v=id=>$('#'+id).value.trim(),o={notice:v('s_notice'),telegram:v('s_tg'),facebook:v('s_fb'),tiktok:v('s_tk'),email:v('s_em'),adultPin:v('s_pin'),dlWait:Math.max(3,Math.min(60,+v('s_wait')||10)),dlAllowed:v('s_allow'),dlMode:$('#s_dm').value,dlPages:v('s_dp'),adsOn:$('#s_ads').checked,adsClient:v('s_cl'),slots:{}};
     SLOTS.forEach(x=>o.slots[x[0]]=v('sl_'+x[0]));
-    try{await set(ref(db,'settings'),o);toast('সেভ হয়েছে')}catch(e){toast('সেভ হয়নি: '+(e.message||e),1)}
+    try{await update(ref(db,'settings'),o);toast('সেভ হয়েছে')}catch(e){toast('সেভ হয়নি: '+(e.message||e),1)}
+  };
+}
+
+
+/* ---------------- download hub (আলাদা ডাউনলোড সাইট) ---------------- */
+const HCOL=[['1','নীল'],['2','সবুজ'],['3','কমলা'],['4','বেগুনি'],['5','লাল'],['6','আকাশি']];
+async function vHub(){
+  const st=(await get(ref(db,'settings'))).val()||{},h=st.hub||{};
+  let sv=h.servers||[];if(!Array.isArray(sv))sv=Object.values(sv);
+  if(!sv.length)sv=[{n:'Fast Server',s:'',c:1,u:''},{n:'Instant Download',s:'',c:2,u:''},{n:'Resumable',s:'',c:3,u:''}];
+  const stm=h.stream||{};
+  const f=(id,l,v,ph='')=>`<label class="f" for="${id}">${l}</label><input id="${id}" value="${esc(v||'')}" placeholder="${esc(ph)}">`;
+  const rowH=(x,i)=>`<div class="panel hsv" style="padding:12px;margin-bottom:10px"><div class="row3"><div><label class="f">সার্ভারের নাম</label><input class="hn" value="${esc(x.n||'')}" placeholder="Fast Cloud"></div><div><label class="f">ছোট লেখা (ঐচ্ছিক)</label><input class="hs" value="${esc(x.s||'')}" placeholder="10GBPS"></div><div><label class="f">রঙ</label><select class="hc">${HCOL.map(c=>`<option value="${c[0]}"${String(x.c||1)===c[0]?' selected':''}>${c[1]}</option>`).join('')}</select></div></div>
+  <label class="f">লিংক টেমপ্লেট (খালি = পোস্টের আসল লিংক)</label><input class="hu" value="${esc(x.u||'')}" placeholder="https://server2.example.com/dl?u={url}"><div style="margin-top:8px"><button class="btn red sm hd" type="button">মুছুন</button></div></div>`;
+  $('#main').innerHTML=`<h2 class="t">ডাউনলোড হাব (আলাদা ডাউনলোড সাইট)</h2>
+  <p class="hint" style="margin:-8px 0 14px">পোস্টের ডাউনলোড বাটন চাপলে দর্শক এই সাইটে আসবে। এখানকার সব বদল সাথে সাথে লাইভ হয়।</p>
+  <div class="panel"><h3 class="s">হাব সাইটের ঠিকানা</h3>${f('h_url','হাব পেজের ঠিকানা',st.dlHub,'https://hossanriad762-bit.github.io/cinebdbox/dl/')}
+  <p class="hint">খালি রাখলে ডাউনলোড বাটন আগের মতো Blogger-এর ডাউনলোড পেজেই যাবে। হাব GitHub-এ আপলোড করার পর ঠিকানাটা এখানে বসান।</p></div>
+  <div class="panel"><h3 class="s">সাধারণ</h3><div class="row2">${f('h_name','সাইটের নাম',h.name,'Cinebdbox Cloud')}${f('h_wait','কাউন্টডাউন (সেকেন্ড, ০ = নেই)',h.wait,'5')}</div>
+  ${f('h_note','নোট (কার্ডের ভেতরে)',h.note,'Adblocker চালু থাকলে বন্ধ করুন...')}${f('h_foot','নিচের লেখা',h.foot,'একটি সার্ভার কাজ না করলে অন্য সার্ভার ব্যবহার করুন।')}${f('h_tg','Telegram লিংক',h.tg,'https://t.me/...')}
+  <label class="f" style="display:flex;gap:8px;align-items:center;margin-top:10px"><input type="checkbox" id="h_ads" ${h.ads!==false?'checked':''}> Adsterra বিজ্ঞাপন চালু</label></div>
+  <div class="panel"><h3 class="s">সার্ভার বাটন</h3><div id="hl">${sv.map(rowH).join('')}</div><button class="btn gl sm" id="hadd" type="button">+ সার্ভার যোগ করুন</button>
+  <p class="hint" style="margin-top:10px">লিংক টেমপ্লেটে <b>{url}</b> লিখলে সেখানে পোস্টের আসল লিংক (এনকোড করা) বসে, <b>{b64}</b> লিখলে base64। খালি রাখলে সরাসরি আসল লিংকে যায়।</p></div>
+  <div class="panel"><h3 class="s">Stream বাটন (ঐচ্ছিক)</h3><div class="row2">${f('h_sn','বাটনের নাম',stm.n,'Stream Online')}${f('h_su','লিংক টেমপ্লেট (খালি = আসল লিংক)',stm.u,'https://...{url}')}</div></div>
+  <button class="btn" id="hsv" type="button">সেভ করুন</button>`;
+  const add=()=>{$('#hl').insertAdjacentHTML('beforeend',rowH({n:'',s:'',c:1,u:''}))};
+  $('#hadd').onclick=add;
+  $('#hl').onclick=e=>{const b=e.target.closest('.hd');if(b)b.closest('.hsv').remove()};
+  $('#hsv').onclick=async()=>{
+    const v=id=>$('#'+id).value.trim();
+    const hu=v('h_url');if(hu&&!/^https:\/\//.test(hu)){toast('হাব ঠিকানা https:// দিয়ে শুরু হতে হবে',1);return}
+    const servers=$$('#hl .hsv').map(r=>({n:$('.hn',r).value.trim(),s:$('.hs',r).value.trim(),c:+$('.hc',r).value||1,u:$('.hu',r).value.trim()})).filter(x=>x.n);
+    if(servers.some(x=>x.u&&!/^https?:\/\//.test(x.u))){toast('লিংক টেমপ্লেট http/https দিয়ে শুরু হতে হবে',1);return}
+    const hub={name:v('h_name'),wait:v('h_wait')===''?5:Math.max(0,Math.min(60,+v('h_wait')||0)),note:v('h_note'),foot:v('h_foot'),tg:v('h_tg'),ads:$('#h_ads').checked,servers,stream:{n:v('h_sn'),u:v('h_su')}};
+    try{await update(ref(db,'settings'),{hub,dlHub:hu});toast('সেভ হয়েছে')}catch(e){toast('সেভ হয়নি: '+(e.message||e),1)}
   };
 }
 
