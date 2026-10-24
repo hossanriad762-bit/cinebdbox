@@ -29,7 +29,7 @@ body{background:#0b0d14 radial-gradient(circle at 50% -10%,#1b2340,transparent 5
 .tgm,.bk{display:block;margin:10px auto;width:max-content;max-width:100%;padding:9px 18px;border-radius:99px;font-weight:700;font-size:14px;color:#fff;text-decoration:none}
 .tgm{background:#229ED9}.bk{background:#232a40;font-weight:600;font-size:13px}
 .bad{padding:30px 18px;text-align:center}.bad h2{margin-bottom:8px}.bad p{color:#8a93b0;font-size:14px}
-</style></head><body><div class="w" id="app"></div>
+.tips{margin:12px 0;padding:12px 14px;border-radius:14px;background:#13182a;border:1px solid #2a3350;text-align:left}.tips b{display:block;color:#ffc43d;font-size:13px;margin-bottom:6px}.tips li{font-size:12.5px;color:#aab3cf;line-height:1.6;margin:4px 0 4px 16px}</style></head><body><div class="w" id="app"></div>
 <script>
 (function(){
   /* ---- ডিফল্ট কনফিগ (Firebase-এর settings/hub এর মান এটাকে ওভাররাইড করে) ---- */
@@ -59,7 +59,7 @@ body{background:#0b0d14 radial-gradient(circle at 50% -10%,#1b2340,transparent 5
   function merge(s){
     try{
       var h=s&&s.hub;if(!h||typeof h!=='object')return;
-      ['name','note','foot','tg'].forEach(function(k){if(typeof h[k]==='string')CFG[k]=h[k]});
+      ['name','note','foot','tg','tips'].forEach(function(k){if(typeof h[k]==='string')CFG[k]=h[k]});
       if(+h.wait>=0&&h.wait!=='')CFG.wait=Math.min(60,+h.wait);
       if(typeof h.ads==='boolean')CFG.ads=h.ads;
       var sv=h.servers;if(sv&&typeof sv==='object'){sv=Array.isArray(sv)?sv:Object.keys(sv).map(function(k){return sv[k]});
@@ -74,6 +74,7 @@ body{background:#0b0d14 radial-gradient(circle at 50% -10%,#1b2340,transparent 5
     var r=u.replace(/\{url\}/g,encodeURIComponent(url)).replace(/\{b64\}/g,b64e(url)).replace(/\{raw\}/g,url);
     return /^https?:\/\//i.test(r)?r:url;
   }
+function tips(){var s=(CFG.tips||'\u09ac\u09bf\u099c\u09cd\u099e\u09be\u09aa\u09a8 \u0995\u09c7\u09a8? \u098f\u0987 \u09b8\u09be\u0987\u099f \u09ab\u09cd\u09b0\u09bf\u0964 \u09ac\u09bf\u099c\u09cd\u099e\u09be\u09aa\u09a8\u09c7\u09b0 \u0986\u09af\u09bc\u09c7 \u09b8\u09be\u09b0\u09cd\u09ad\u09be\u09b0 \u0993 \u09b8\u09be\u0987\u099f \u099a\u09b2\u09c7, \u09a4\u09be\u0987 \u0995\u09af\u09bc\u09c7\u0995 \u09b8\u09c7\u0995\u09c7\u09a8\u09cd\u09a1 \u09a7\u09c8\u09b0\u09cd\u09af \u09a7\u09b0\u09c7 \u0985\u09aa\u09c7\u0995\u09cd\u09b7\u09be \u0995\u09b0\u09c1\u09a8\u0964\n\u09a8\u09a4\u09c1\u09a8 \u099f\u09cd\u09af\u09be\u09ac \u09ac\u09be \u09aa\u09aa\u0986\u09aa \u0996\u09c1\u09b2\u09b2\u09c7 \u09b8\u09c7\u099f\u09be \u09ac\u09a8\u09cd\u09a7 \u0995\u09b0\u09c7 \u0986\u0997\u09c7\u09b0 \u09aa\u09c7\u099c\u09c7 \u09ab\u09bf\u09b0\u09c7 \u0986\u09b8\u09c1\u09a8\u0964 \u0993\u0996\u09be\u09a8\u09c7 \u0995\u09bf\u099b\u09c1 \u0987\u09a8\u09b8\u09cd\u099f\u09b2 \u09ac\u09be \u09b2\u0997\u0987\u09a8 \u0995\u09b0\u09ac\u09c7\u09a8 \u09a8\u09be\u0964\n\u09ad\u09bf\u09a1\u09bf\u0993 \u099a\u09b2\u09b2\u09c7\u0993 \u09b8\u09be\u0989\u09a8\u09cd\u09a1 \u09a8\u09be \u098f\u09b2\u09c7 VLC \u09ac\u09be MX Player \u09a6\u09bf\u09af\u09bc\u09c7 \u099a\u09be\u09b2\u09be\u09a8\u0964').split('\n').filter(function(x){return x.trim()});var d=el('div','tips');d.appendChild(el('b',null,'\u2139 \u099c\u09c7\u09a8\u09c7 \u09b0\u09be\u0996\u09c1\u09a8'));var u=el('ul');s.forEach(function(x){u.appendChild(el('li',null,x))});d.appendChild(u);return d}
   function adbox(code,w,h){
     if(!CFG.ads)return null;
     var d=el('div','ad'),f=document.createElement('iframe');
@@ -111,6 +112,7 @@ body{background:#0b0d14 radial-gradient(circle at 50% -10%,#1b2340,transparent 5
     });
     if(CFG.stream&&CFG.stream.n){var sa=el('a','b c6 w2 '+(CFG.wait>0?'off':''),'\u25B6 '+CFG.stream.n);sa.href=target(CFG.stream.u||'');sa.target='_blank';sa.rel='nofollow noopener noreferrer';sv.appendChild(sa);links.push(sa)}
     card.appendChild(sv);app.appendChild(card);
+    app.appendChild(tips());
     if(CFG.foot)app.appendChild(el('div','ft',CFG.foot));
     var a3=adbox(A,300,250);if(a3)app.appendChild(a3);
     var a4=adbox(B,320,50);if(a4)app.appendChild(a4);
