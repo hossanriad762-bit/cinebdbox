@@ -151,7 +151,7 @@ function showDenied(u){
 }
 
 /* ---------------- shell ---------------- */
-const TABS=[['dash','▦','ড্যাশবোর্ড'],['posts','☰','পোস্ট'],['gen','✎','নতুন পোস্ট'],['pages','❏','পেজ'],['req','✉','রিকোয়েস্ট'],['rep','⚑','রিপোর্ট'],['hub','☁','ডাউনলোড হাব'],['short','🔗','শর্টনার'],['set','⚙','সেটিংস']];
+const TABS=[['dash','▦','ড্যাশবোর্ড'],['posts','☰','পোস্ট'],['gen','✎','নতুন পোস্ট'],['pages','❏','পেজ'],['req','✉','রিকোয়েস্ট'],['rep','⚑','রিপোর্ট'],['hub','☁','ডাউনলোড হাব'],['soon','⏳','আসছে'],['short','🔗','শর্টনার'],['set','⚙','সেটিংস']];
 let cur='dash';
 function showApp(u){
   app$().innerHTML=`<div class="shell"><nav class="side"><div class="logo">Cine<em>bdbox</em></div>
@@ -167,7 +167,7 @@ function go(t){
   cur=t;location.hash=t;
   $$('.side a[data-t]').forEach(a=>a.classList.toggle('on',a.dataset.t===t));
   $('#main').innerHTML='<div class="skl"></div><div class="skl"></div>';
-  ({dash:vDash,posts:vPosts,gen:vGen,pages:vPages,req:vReq,rep:vRep,hub:vHub,short:vShort,set:vSet}[t])().catch(e=>{$('#main').innerHTML=`<div class="panel"><b>সমস্যা হয়েছে</b><p class="hint">${esc(e.message||e)}</p><p class="hint">Firebase Rules (firebase-rules.json) Publish করা আছে কিনা দেখুন।</p></div>`});
+  ({dash:vDash,posts:vPosts,gen:vGen,pages:vPages,req:vReq,rep:vRep,hub:vHub,short:vShort,soon:vSoon,set:vSet}[t])().catch(e=>{$('#main').innerHTML=`<div class="panel"><b>সমস্যা হয়েছে</b><p class="hint">${esc(e.message||e)}</p><p class="hint">Firebase Rules (firebase-rules.json) Publish করা আছে কিনা দেখুন।</p></div>`});
 }
 
 /* ---------------- dashboard ---------------- */
@@ -187,6 +187,8 @@ async function vDash(){
   <div class="panel bars"><h3 class="s">সবচেয়ে বেশি লাইক</h3>${topL.map(x=>`<div class="it"><span>${esc(tmap[x.k]?.t||x.k)}</span><div class="bar"><i style="width:${Math.max(3,x.c/maxL*100)}%"></i></div><b>${nf(x.c)}</b></div>`).join('')||'<p class="hint">এখনো কোনো লাইক নেই।</p>'}</div>
   <div class="panel"><h3 class="s">ব্লগের ঠিকানা</h3><p class="hint">ড্যাশবোর্ডের লিংকগুলো এই ঠিকানা দিয়ে খুলবে।</p><div style="display:flex;gap:8px;margin-top:8px"><input id="site" value="${esc(siteUrl())}"><button class="btn gl" id="ss">সেভ</button></div></div>`;
   $('#ss').onclick=()=>{LS.set('site',$('#site').value.trim());toast('সেভ হয়েছে')};
+  get(ref(db,'links')).then(sn=>{const L=[];sn.forEach(c=>{const x=c.val()||{};L.push({k:c.key,t:x.t||c.key,c:+x.c||0})});if(!L.length)return;const tot=L.reduce((a,b)=>a+b.c,0),top=L.sort((a,b)=>b.c-a.c).slice(0,6),mx=top[0].c||1;
+    $('#main').insertAdjacentHTML('beforeend',`<div class="panel bars"><h3 class="s">শর্টনার: মোট ক্লিক ${nf(tot)} (${L.length}টি লিংক)</h3>${top.map(x=>`<div class="it"><span>${esc(x.t)}</span><div class="bar"><i style="width:${Math.max(3,x.c/mx*100)}%"></i></div><b>${nf(x.c)}</b></div>`).join('')}</div>`)}).catch(()=>{});
   if(bOn())bapi('blogs/'+BL.bid).then(b=>{const g=$('.grid4');if(g)g.insertAdjacentHTML('afterbegin',`<div class="stat"><b>${nf(b.posts?.totalItems)}</b><span>মোট পোস্ট (Blogger)</span></div><div class="stat"><b>${nf(b.pages?.totalItems)}</b><span>মোট পেজ</span></div>`)}).catch(()=>{});
   else if(LS.get('cid'))$('.grid4').insertAdjacentHTML('afterend','<div class="panel"><span class="hint">Blogger পরিসংখ্যান ও এডিটের জন্য <a href="#posts" style="text-decoration:underline">পোস্ট ট্যাবে</a> সংযুক্ত হন।</span></div>');
 }
@@ -257,7 +259,10 @@ async function vSet(){
   <div class="panel"><h3 class="s">বিজ্ঞাপন</h3><label class="f" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="s_ads" ${s.adsOn!==false?'checked':''}> বিজ্ঞাপন চালু</label>
   ${f('s_cl','AdSense Publisher ID',s.adsClient,'input','ca-pub-XXXXXXXXXXXXXXXX')}
   <p class="hint">প্রতিটি স্লটে AdSense Ad-slot আইডি (শুধু সংখ্যা) অথবা যেকোনো নেটওয়ার্কের HTML/স্ক্রিপ্ট কোড দিন। খালি স্লটে কিছু দেখায় না।</p>
-  ${f('s_pop','Popunder কোড (খালি = ডিফল্ট)',s.adsPop,'area')}${f('s_extra','অতিরিক্ত স্ক্রিপ্ট: Social Bar / Native ইত্যাদি (পুরো কোড)',s.adsExtra,'area')}${SLOTS.map(x=>f('sl_'+x[0],x[1]+' <small>('+x[0]+')</small>',sl[x[0]],'area')).join('')}</div>
+  ${f('s_pop','Popunder কোড (খালি = ডিফল্ট)',s.adsPop,'area')}${f('s_extra','অতিরিক্ত স্ক্রিপ্ট: Social Bar / Native ইত্যাদি (পুরো কোড)',s.adsExtra,'area')}<h3 class="s" style="margin-top:16px">কোন জায়গায় কতটা বিজ্ঞাপন</h3>
+  <p class="hint">প্রতিটা জায়গার জন্য বেছে নিন: <b>থিমের ডিফল্ট</b> (থিমে যে কোড বসানো আছে), <b>বন্ধ</b> (ওই জায়গায় কিছু দেখাবে না), অথবা <b>নিজের কোড</b>। সেভ করার পর সাইটে প্রথমবার ঢুকলে পেজ একবার নিজে রিফ্রেশ হয়ে নতুন সেটিংস নেয়।</p>
+  <div class="chk" style="margin-bottom:10px"><button type="button" class="btn gl sm" data-pre="low">কম বিজ্ঞাপন</button><button type="button" class="btn gl sm" data-pre="mid">মাঝারি</button><button type="button" class="btn gl sm" data-pre="all">সব চালু (ডিফল্ট)</button><button type="button" class="btn red sm" data-pre="none">সব বন্ধ</button></div>
+  ${SLOTS.map(x=>{const v=sl[x[0]],m=v==='__off'?'off':(v&&String(v).trim()?'custom':'def');return `<div class="panel slr" data-s="${x[0]}" style="padding:10px;margin-bottom:8px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap"><b style="font-size:13.5px">${x[1]} <small>(${x[0]})</small></b><select class="slm" style="width:auto;padding:7px 10px"><option value="def"${m==='def'?' selected':''}>থিমের ডিফল্ট</option><option value="off"${m==='off'?' selected':''}>বন্ধ</option><option value="custom"${m==='custom'?' selected':''}>নিজের কোড</option></select></div><textarea class="slc" style="min-height:56px;margin-top:8px;${m==='custom'?'':'display:none'}" placeholder="বিজ্ঞাপনের কোড">${m==='custom'?esc(v):''}</textarea></div>`}).join('')}</div>
   <button class="btn" id="sv">সেভ করুন</button>
   <div class="panel" style="margin-top:18px"><h3 class="s">Blogger সংযোগ</h3>${connForm()}</div>
   <div class="panel"><h3 class="s">ব্যাকআপ (সেটিংস)</h3><p class="hint">বিজ্ঞাপন কোড ও নোটিশ হারিয়ে গেলে ফেরাতে। কপি করে কোথাও রেখে দিন, দরকারে নিচে পেস্ট করে "ফেরান" চাপুন।</p>
@@ -266,9 +271,12 @@ async function vSet(){
   $('#bkc').onclick=async()=>{const j=JSON.stringify((await get(ref(db,'settings'))).val()||{},null,1);$('#bk').value=j;copy(j)};
   $('#bkr').onclick=async()=>{try{const o=JSON.parse($('#bk').value);if(!o||typeof o!=='object'||!confirm('এই সেটিংস দিয়ে বর্তমান সেটিংস বদলে দেবেন?'))return;await set(ref(db,'settings'),o);toast('ফেরানো হয়েছে');vSet()}catch(e){toast('JSON ঠিক নয়: '+(e.message||e),1)}};
   $$('#main textarea[id^=sl_]').forEach(t=>t.style.minHeight='56px');
+  $('#main').addEventListener('change',e=>{const s=e.target.closest('.slm');if(s)$('.slc',s.closest('.slr')).style.display=s.value==='custom'?'':'none'});
+  const PRE={low:['post2','dl1','anchor'],mid:['top','home1','post2','post3','dl1','foot','anchor'],all:SLOTS.map(x=>x[0]),none:[]};
+  $('#main').addEventListener('click',e=>{const b=e.target.closest('[data-pre]');if(!b)return;const on=PRE[b.dataset.pre];$$('#main .slr').forEach(r=>{const s=$('.slm',r);if(s.value==='custom')return;s.value=on.includes(r.dataset.s)?'def':'off'});toast('ঠিক করা হয়েছে, নিচে "সেভ করুন" চাপুন')});
   $('#sv').onclick=async()=>{
     const v=id=>$('#'+id).value.trim(),o={notice:v('s_notice'),telegram:v('s_tg'),facebook:v('s_fb'),tiktok:v('s_tk'),email:v('s_em'),adultPin:v('s_pin'),dlWait:Math.max(3,Math.min(60,+v('s_wait')||10)),dlAllowed:v('s_allow'),dlMode:$('#s_dm').value,dlPages:v('s_dp'),adsOn:$('#s_ads').checked,adsClient:v('s_cl'),adsPop:v('s_pop'),adsExtra:v('s_extra'),fb:{on:$('#s_fbon').checked,url:v('s_fburl'),pct:Math.max(0,Math.min(100,+v('s_fbpct')||0)),gap:Math.max(0,+v('s_fbgap')||0)},slots:{}};
-    SLOTS.forEach(x=>o.slots[x[0]]=v('sl_'+x[0]));
+    $$('#main .slr').forEach(r=>{const m=$('.slm',r).value;o.slots[r.dataset.s]=m==='off'?'__off':(m==='custom'?$('.slc',r).value.trim():'')});
     try{await update(ref(db,'settings'),o);toast('সেভ হয়েছে')}catch(e){toast('সেভ হয়নি: '+(e.message||e),1)}
   };
 }
@@ -308,6 +316,27 @@ async function vHub(){
   };
 }
 
+
+
+/* ---------------- শিগগিরই আসছে ---------------- */
+async function vSoon(){
+  const v=(await get(ref(db,'upcoming'))).val()||{},rows=Object.entries(v).sort((x,y)=>String(x[1].d).localeCompare(String(y[1].d)));
+  const f=(id,l,ph='',t='text')=>`<label class="f" for="${id}">${l}</label><input id="${id}" type="${t}" placeholder="${esc(ph)}">`;
+  $('#main').innerHTML=`<h2 class="t">শিগগিরই আসছে</h2><p class="hint" style="margin:-8px 0 14px">এখানে যোগ করলে হোমপেজে "শিগগিরই আসছে" সারিতে দেখাবে। রিলিজের ৭ দিন পর নিজে থেকে সরে যাবে।</p>
+  <div class="panel"><h3 class="s">নতুন যোগ করুন</h3><div class="row2">${f('u_t','নাম','Hope 2')}${f('u_d','রিলিজ তারিখ','', 'date')}</div>
+  <div class="row2">${f('u_n','ছোট নোট (ঐচ্ছিক)','বাংলা • হলিউড')}${f('u_u','পোস্টের পথ (পোস্ট হলে, ঐচ্ছিক)','/2026/10/hope.html')}</div>${f('u_p','পোস্টার লিংক (https)','https://image.tmdb.org/t/p/w500/...')}
+  <div style="margin-top:12px"><button class="btn" id="u_go" type="button">যোগ করুন</button></div></div>
+  <div class="panel"><h3 class="s">তালিকা (${rows.length})</h3>${rows.length?rows.map(([k,x])=>`<div class="panel" style="padding:10px;margin-bottom:8px" data-k="${esc(k)}"><div style="font-weight:600">${esc(x.t)}</div><div class="hint">${esc(x.d)}${x.n?' • '+esc(x.n):''}${x.u?' • '+esc(x.u):''}</div><div style="margin-top:8px"><button class="btn red sm dl" type="button">মুছুন</button></div></div>`).join(''):'<p class="hint">কিছু নেই।</p>'}</div>`;
+  $('#u_go').onclick=async()=>{
+    const g=id=>$('#'+id).value.trim(),o={t:g('u_t'),d:g('u_d'),n:g('u_n'),u:g('u_u'),p:g('u_p'),ts:Date.now()};
+    if(!o.t||!/^\d{4}-\d{2}-\d{2}$/.test(o.d)){toast('নাম আর তারিখ দিন',1);return}
+    if(o.p&&!/^https:\/\//.test(o.p)){toast('পোস্টার লিংক https:// দিয়ে শুরু হবে',1);return}
+    if(o.u&&!/^\//.test(o.u)){toast('পোস্টের পথ / দিয়ে শুরু হবে',1);return}
+    Object.keys(o).forEach(k=>{if(o[k]==='')delete o[k]});
+    try{await set(ref(db,'upcoming/'+Date.now().toString(36)),o);toast('যোগ হয়েছে');vSoon()}catch(e){toast('হয়নি: '+(e.message||e),1)}
+  };
+  $('#main').addEventListener('click',async e=>{const d=e.target.closest('[data-k]');if(!d||!e.target.closest('.dl'))return;if(!confirm('মুছবেন?'))return;try{await remove(ref(db,'upcoming/'+d.dataset.k));vSoon()}catch(er){toast('হয়নি: '+(er.message||er),1)}});
+}
 
 /* ---------------- link shortener ---------------- */
 const SBASE='https://hossanriad762-bit.github.io/cinebdbox/go/';
@@ -410,6 +439,15 @@ function renderLists(){
   }
 }
 
+
+const CAST_RE=/<!--cast-->[\s\S]*?<!--\/cast-->\s*/;
+function castBlock(c){return `<!--cast-->\n<h3>কাস্ট</h3>\n<div class="casts">\n`+c.map(x=>`  <div class="cs"><img src="${esc(x.p)}" alt="${esc(x.n)}" loading="lazy" /><b>${esc(x.n)}</b><small>${esc(x.r)}</small></div>`).join('\n')+`\n</div>\n<!--/cast-->`}
+function setCast(html,c){
+  const blk=castBlock(c)+'\n\n';let h=html.replace(CAST_RE,'');
+  const k=h.search(/<div class="dl-box"/);if(k>=0)return h.slice(0,k)+blk+h.slice(k);
+  const k2=h.search(/<h3>স্ক্রিনশট/);if(k2>=0)return h.slice(0,k2)+blk+h.slice(k2);
+  return h.replace(/\s+$/,'')+'\n\n'+blk;
+}
 function ytId(v){v=(v||'').trim();if(!v)return '';const m=v.match(/(?:youtu\.be\/|v=|embed\/)([\w-]{6,15})/);return m?m[1]:(/^[\w-]{6,15}$/.test(v)?v:'')}
 const val=id=>($('#'+id)?.value||'').trim();
 
@@ -433,14 +471,14 @@ function build(){
   const facts=mode==='movie'?[['মুভির নাম',name],['রিলিজ',year],['ভাষা',lang],['সময়কাল',rtTxt],['কোয়ালিটি',quals.join(' • ')],['দেশ',country],['ডিরেক্টর',dir],['কাস্ট',cast]]
     :[['সিরিজের নাম',name],['রিলিজ',year],['ভাষা',lang],['সিজন',G.ss.map(s=>'S'+String(s.n||1).padStart(2,'0')).join(', ')+(rtTxt?' • '+rtTxt:'')],['স্ট্যাটাস',status],['প্ল্যাটফর্ম',plat],['দেশ',country],['কাস্ট',cast]];
   const h=[];
-  if(poster)h.push(`<span style="display:none">[[P:${poster}]]</span>`);
+  if(poster)h.push(`<span style="display:none">[[P:${poster}]]${trailer?`[[T:${trailer}]]`:''}</span>`);
   h.push(`<div class="mvx">`,`  <div class="ps"><img src="${esc(poster)}" alt="${esc(name)}" /></div>`,`  <div class="ds">`);
   if(rating){const p=Math.max(0,Math.min(100,Math.round(parseFloat(rating)*10)||0));h.push(`    <div class="rate-row"><div class="ring" style="--p:${p}"><span>${esc(rating)}</span></div><div><b>IMDb রেটিং</b><small>১০ এর মধ্যে ${esc(rating)}${votes?' • '+esc(votes)+' ভোট':''}</small></div></div>`)}
   h.push(`    <div class="facts">`);facts.filter(f=>f[1]).forEach(f=>h.push(`      <div class="fact"><small>${f[0]}</small><b>${esc(f[1])}</b></div>`));h.push(`    </div>`);
   if(genres.length)h.push(`    <div class="chips">${genres.map(g=>`<a href="/search/label/${encodeURIComponent(g)}">${esc(g)}</a>`).join('')}</div>`);
   h.push(`  </div>`,`</div>`);
   if(story)h.push('',`<h3>গল্পসংক্ষেপ</h3>`,`<p>${esc(story)}</p>`);
-  if(G.cast&&G.cast.length&&$('#f_castph')?.checked!==false)h.push('',`<h3>কাস্ট</h3>`,`<div class="casts">`,...G.cast.map(c=>`  <div class="cs"><img src="${esc(c.p)}" alt="${esc(c.n)}" loading="lazy" /><b>${esc(c.n)}</b><small>${esc(c.r)}</small></div>`),`</div>`);
+  if(G.cast&&G.cast.length&&$('#f_castph')?.checked!==false)h.push('',castBlock(G.cast));
   if(shots.length)h.push('',`<h3>স্ক্রিনশট</h3>`,`<div class="screens">`,...shots.map((s,i)=>`  <img src="${esc(s)}" alt="Screenshot ${i+1}" />`),`</div>`);
   if(trailer)h.push('',`<h3>ট্রেইলার</h3>`,`<iframe src="https://www.youtube.com/embed/${trailer}" allowfullscreen="allowfullscreen"></iframe>`);
   const aTag=(cls,q,s,link,txt)=>`<a class="${cls}" data-dl data-q="${esc(q)}" data-s="${esc(s)}" href="${esc(link)}" rel="nofollow noopener" target="_blank">${txt}</a>`;
@@ -479,7 +517,7 @@ function autoCats(d){
   const lm={hi:'Hindi',bn:'Bangla',en:'English',ko:'Korean',ta:'Tamil',te:'Telugu'};if(lm[ol])setv('f_lang',lm[ol]);
 }
 async function tmdb(path,params={}){
-  const key=val('tk');if(!key)throw new Error('TMDB API key দিন');LS.set('tmdb',key);
+  const key=val('tk')||LS.get('tmdb');if(!key)throw new Error('TMDB API key দিন');LS.set('tmdb',key);
   const r=await fetch('https://api.themoviedb.org/3'+path+'?'+new URLSearchParams({api_key:key,language:'en-US',...params}));
   if(!r.ok)throw new Error('TMDB ত্রুটি '+r.status+' (কী ঠিক আছে?)');return r.json();
 }
@@ -741,7 +779,7 @@ async function openEdit(kind,id,back){
   <div class="panel"><label class="f">টাইটেল</label><input id="e_title" value="${esc(d.title||'')}">
   ${isP?`<label class="f">লেবেল (কমা দিয়ে)</label><input id="e_labels" list="lbl" value="${esc((d.labels||[]).join(', '))}"><div class="chk" id="e_chips" style="margin-top:8px">${['Trending','Featured','New Episode','18+'].map(c=>`<button type="button" class="btn sm ${(d.labels||[]).includes(c)?'':'gl'}" data-ch="${c}">${c}</button>`).join('')}</div>`:''}</div>
   <div class="panel"><h3 class="s">ডাউনলোড লিংক এডিটর</h3><p class="hint" style="margin:-6px 0 8px">ডাউনলোড বাটনের লিংক, কোয়ালিটি ও সাইজ এখানে বদলান। নিচের HTML নিজে থেকে আপডেট হবে।</p><div id="e_links"></div></div>
-  <div class="panel ed"><h3 class="s">HTML</h3><textarea id="e_html" spellcheck="false"></textarea></div>
+  <div class="panel ed"><h3 class="s">HTML</h3>${isP?'<div style="margin-bottom:10px"><button class="btn gl sm" id="e_cast" type="button">TMDB থেকে কাস্ট ছবি যোগ করুন</button> <span class="hint" id="e_castm"></span></div>':''}<textarea id="e_html" spellcheck="false"></textarea></div>
   <div class="panel"><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="e_save">সেভ করুন</button>${isP&&!live?'<button class="btn ok" id="e_pub">সেভ ও পাবলিশ</button>':''}${isP&&live?'<button class="btn gl" id="e_draft">Draft-এ নিন</button>':''}${d.url&&live?`<a class="btn gl" href="${esc(d.url)}" target="_blank" rel="noopener">সাইটে দেখুন</a>`:''}<button class="btn red" id="e_del">ডিলিট</button></div><div class="hint" id="e_msg"></div></div>`;
   const ta=$('#e_html');ta.value=d.content||'';
   const drawLinks=()=>{
@@ -756,6 +794,19 @@ async function openEdit(kind,id,back){
     ta.value=ta.value.slice(0,x.start)+setAttr(x.tag,attr,t.value.trim())+ta.value.slice(x.end);
   };
   ta.onchange=drawLinks;
+  if(isP&&$('#e_cast'))$('#e_cast').onclick=async()=>{
+    const m=$('#e_castm');m.textContent='খোঁজা হচ্ছে...';
+    try{
+      const t=$('#e_title').value,name=t.replace(/\s*[\[(].*$/,'').trim()||t,yr=(t.match(/\((\d{4})\)/)||[])[1],tv=/\bS\d{1,2}\b/i.test(t)||(splitL($('#e_labels').value).includes('Web Series'));
+      const pr={query:name};if(yr)pr[tv?'first_air_date_year':'year']=yr;
+      const r=await tmdb('/search/'+(tv?'tv':'movie'),pr),it=(r.results||[])[0];
+      if(!it){m.textContent='TMDB-তে এই নামে কিছু পাওয়া যায়নি';return}
+      const d=await tmdb(`/${tv?'tv':'movie'}/${it.id}`,{append_to_response:'credits'});
+      const c=(d.credits?.cast||[]).filter(x=>x.profile_path).slice(0,10).map(x=>({n:x.name,r:x.character||'',p:'https://image.tmdb.org/t/p/w185'+x.profile_path}));
+      if(!c.length){m.textContent='"'+(d.title||d.name)+'" এর কাস্ট ছবি পাওয়া যায়নি';return}
+      ta.value=setCast(ta.value,c);m.textContent='"'+(d.title||d.name)+'" থেকে '+c.length+' জন যোগ হয়েছে। এখন সেভ করুন।';
+    }catch(e){m.textContent='হয়নি: '+(e.message||e)+' (নতুন পোস্ট ট্যাবে TMDB Key দেওয়া আছে কি?)'}
+  };
   if(isP){
     $('#e_chips').onclick=e=>{const b=e.target.closest('[data-ch]');if(!b)return;const inp=$('#e_labels'),c=b.dataset.ch,L=splitL(inp.value),i=L.indexOf(c);i>=0?L.splice(i,1):L.push(c);inp.value=L.join(', ');b.classList.toggle('gl',i>=0)};
     $('#e_labels').oninput=()=>{const L=splitL($('#e_labels').value);$$('#e_chips [data-ch]').forEach(b=>b.classList.toggle('gl',!L.includes(b.dataset.ch)))};
@@ -764,7 +815,9 @@ async function openEdit(kind,id,back){
   const save=async pub=>{
     const m=$('#e_msg');m.textContent='সেভ হচ্ছে...';
     try{
-      const body={title:$('#e_title').value.trim(),content:ta.value};if(isP)body.labels=splitL($('#e_labels').value);
+      const body={title:$('#e_title').value.trim(),content:ta.value};if(isP){body.labels=splitL($('#e_labels').value);
+        const yt=(body.content.match(/youtube(?:-nocookie)?\.com\/embed\/([\w-]{6,15})/)||[])[1];
+        if(yt&&!/\[\[T:/.test(body.content)&&/\[\[P:\S+?\]\]/.test(body.content))body.content=body.content.replace(/(\[\[P:\S+?\]\])/,'$1[[T:'+yt+']]');}
       await bapi(bb((isP?'posts/':'pages/')+id),{method:'PATCH',body});
       if(pub)await bapi(bb('posts/'+id+'/publish'),{method:'POST'});
       LABELS=null;m.textContent='সেভ হয়েছে ✓';toast(pub?'সেভ ও পাবলিশ হয়েছে':'সেভ হয়েছে');if(pub)openEdit(kind,id,back);
