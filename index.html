@@ -250,10 +250,14 @@ async function vSet(){
   <label class="f">একাধিক ডাউনলোড পেজ</label><div class="row2"><div><select id="s_dm">${[['single','একটাই (ডিফল্ট পেজ)'],['random','র‍্যান্ডম: প্রতিবার যেকোনো একটা'],['chain','চেইন: ১ম → ২য় → ৩য় → আসল লিংক']].map(x=>`<option value="${x[0]}"${(s.dlMode||'single')===x[0]?' selected':''}>${x[1]}</option>`).join('')}</select></div>${f('s_dp','পেজের পথ (কমা দিয়ে)',s.dlPages,'input','/p/download.html, /p/download2.html, /p/download3.html')}</div>
   <p class="hint">র‍্যান্ডম বা চেইন চালু করার আগে ওই পেজগুলো Blogger-এ বানিয়ে নিন, নইলে ডাউনলোড বাটনে ৪০৪ আসবে।</p>
   <p class="hint">সতর্কতা: পিন ও বিজ্ঞাপন কোড ডেটাবেসে প্রকাশ্য পড়া যায় (থিমের কোডেও তাই ছিল)। ১৮+ লক শুধু বয়স-সতর্কতা।</p></div>
+  <div class="panel"><h3 class="s">Facebook গ্রুপ প্রমো</h3><p class="hint">দর্শক কোনো লিংকে ক্লিক করলে মাঝে মাঝে আপনার গ্রুপ নতুন ট্যাবে খুলবে। যে পেজভিউতে গ্রুপ খোলার কথা, সেখানে Popunder বিজ্ঞাপন চলবে না, বাকিতে চলবে।</p>
+  <label class="f" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="s_fbon" ${(s.fb||{}).on!==false?'checked':''}> চালু</label>
+  ${f('s_fburl','গ্রুপের লিংক',(s.fb||{}).url||'https://www.facebook.com/share/g/19gj2sicKz/')}
+  <div class="row2">${f('s_fbpct','কত শতাংশ পেজভিউতে (০–১০০)',(s.fb||{}).pct==null?40:(s.fb||{}).pct,'input','40')}${f('s_fbgap','একই দর্শককে আবার দেখানোর আগে বিরতি (মিনিট)',(s.fb||{}).gap==null?20:(s.fb||{}).gap,'input','20')}</div></div>
   <div class="panel"><h3 class="s">বিজ্ঞাপন</h3><label class="f" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="s_ads" ${s.adsOn!==false?'checked':''}> বিজ্ঞাপন চালু</label>
   ${f('s_cl','AdSense Publisher ID',s.adsClient,'input','ca-pub-XXXXXXXXXXXXXXXX')}
   <p class="hint">প্রতিটি স্লটে AdSense Ad-slot আইডি (শুধু সংখ্যা) অথবা যেকোনো নেটওয়ার্কের HTML/স্ক্রিপ্ট কোড দিন। খালি স্লটে কিছু দেখায় না।</p>
-  ${SLOTS.map(x=>f('sl_'+x[0],x[1]+' <small>('+x[0]+')</small>',sl[x[0]],'area')).join('')}</div>
+  ${f('s_pop','Popunder কোড (খালি = ডিফল্ট)',s.adsPop,'area')}${f('s_extra','অতিরিক্ত স্ক্রিপ্ট: Social Bar / Native ইত্যাদি (পুরো কোড)',s.adsExtra,'area')}${SLOTS.map(x=>f('sl_'+x[0],x[1]+' <small>('+x[0]+')</small>',sl[x[0]],'area')).join('')}</div>
   <button class="btn" id="sv">সেভ করুন</button>
   <div class="panel" style="margin-top:18px"><h3 class="s">Blogger সংযোগ</h3>${connForm()}</div>
   <div class="panel"><h3 class="s">ব্যাকআপ (সেটিংস)</h3><p class="hint">বিজ্ঞাপন কোড ও নোটিশ হারিয়ে গেলে ফেরাতে। কপি করে কোথাও রেখে দিন, দরকারে নিচে পেস্ট করে "ফেরান" চাপুন।</p>
@@ -263,7 +267,7 @@ async function vSet(){
   $('#bkr').onclick=async()=>{try{const o=JSON.parse($('#bk').value);if(!o||typeof o!=='object'||!confirm('এই সেটিংস দিয়ে বর্তমান সেটিংস বদলে দেবেন?'))return;await set(ref(db,'settings'),o);toast('ফেরানো হয়েছে');vSet()}catch(e){toast('JSON ঠিক নয়: '+(e.message||e),1)}};
   $$('#main textarea[id^=sl_]').forEach(t=>t.style.minHeight='56px');
   $('#sv').onclick=async()=>{
-    const v=id=>$('#'+id).value.trim(),o={notice:v('s_notice'),telegram:v('s_tg'),facebook:v('s_fb'),tiktok:v('s_tk'),email:v('s_em'),adultPin:v('s_pin'),dlWait:Math.max(3,Math.min(60,+v('s_wait')||10)),dlAllowed:v('s_allow'),dlMode:$('#s_dm').value,dlPages:v('s_dp'),adsOn:$('#s_ads').checked,adsClient:v('s_cl'),slots:{}};
+    const v=id=>$('#'+id).value.trim(),o={notice:v('s_notice'),telegram:v('s_tg'),facebook:v('s_fb'),tiktok:v('s_tk'),email:v('s_em'),adultPin:v('s_pin'),dlWait:Math.max(3,Math.min(60,+v('s_wait')||10)),dlAllowed:v('s_allow'),dlMode:$('#s_dm').value,dlPages:v('s_dp'),adsOn:$('#s_ads').checked,adsClient:v('s_cl'),adsPop:v('s_pop'),adsExtra:v('s_extra'),fb:{on:$('#s_fbon').checked,url:v('s_fburl'),pct:Math.max(0,Math.min(100,+v('s_fbpct')||0)),gap:Math.max(0,+v('s_fbgap')||0)},slots:{}};
     SLOTS.forEach(x=>o.slots[x[0]]=v('sl_'+x[0]));
     try{await update(ref(db,'settings'),o);toast('সেভ হয়েছে')}catch(e){toast('সেভ হয়নি: '+(e.message||e),1)}
   };
@@ -372,7 +376,7 @@ async function vGen(){
     <div class="row3"><div><label class="f">ভাষা</label><select id="f_lang">${LANGS.map(l=>`<option>${l}</option>`).join('')}</select></div>${inp('f_country','দেশ')}${inp('f_platform','প্ল্যাটফর্ম','Netflix')}</div>
     <div class="row3">${inp('f_rating','IMDb রেটিং','7.8')}${inp('f_votes','ভোট সংখ্যা','250K')}${inp('f_runtime','সময়কাল (মিনিট) / সিরিজে এপিসোড','135')}</div>
     <div class="row2">${inp('f_dir','ডিরেক্টর')}${inp('f_status','স্ট্যাটাস (সিরিজ)','Completed')}</div>
-    ${inp('f_cast','কাস্ট','Actor 1, Actor 2')}${inp('f_genres','জনরা (কমা দিয়ে)','Action, Thriller')}
+    ${inp('f_cast','কাস্ট','Actor 1, Actor 2')}<label class="f" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="f_castph" checked> কাস্টের ছবিসহ কার্ড দেখান (TMDB থেকে আনলে)</label>${inp('f_genres','জনরা (কমা দিয়ে)','Action, Thriller')}
     ${inp('f_poster','পোস্টার লিংক (2:3)','https://...')}
     <div class="row3">${inp('f_s1','স্ক্রিনশট ১')}${inp('f_s2','স্ক্রিনশট ২')}${inp('f_s3','স্ক্রিনশট ৩')}</div>
     <div class="row2">${inp('f_trailer','ট্রেইলার (YouTube ID বা লিংক)')}${inp('f_stream','অনলাইনে দেখার লিংক (ঐচ্ছিক)')}</div>
@@ -436,6 +440,7 @@ function build(){
   if(genres.length)h.push(`    <div class="chips">${genres.map(g=>`<a href="/search/label/${encodeURIComponent(g)}">${esc(g)}</a>`).join('')}</div>`);
   h.push(`  </div>`,`</div>`);
   if(story)h.push('',`<h3>গল্পসংক্ষেপ</h3>`,`<p>${esc(story)}</p>`);
+  if(G.cast&&G.cast.length&&$('#f_castph')?.checked!==false)h.push('',`<h3>কাস্ট</h3>`,`<div class="casts">`,...G.cast.map(c=>`  <div class="cs"><img src="${esc(c.p)}" alt="${esc(c.n)}" loading="lazy" /><b>${esc(c.n)}</b><small>${esc(c.r)}</small></div>`),`</div>`);
   if(shots.length)h.push('',`<h3>স্ক্রিনশট</h3>`,`<div class="screens">`,...shots.map((s,i)=>`  <img src="${esc(s)}" alt="Screenshot ${i+1}" />`),`</div>`);
   if(trailer)h.push('',`<h3>ট্রেইলার</h3>`,`<iframe src="https://www.youtube.com/embed/${trailer}" allowfullscreen="allowfullscreen"></iframe>`);
   const aTag=(cls,q,s,link,txt)=>`<a class="${cls}" data-dl data-q="${esc(q)}" data-s="${esc(s)}" href="${esc(link)}" rel="nofollow noopener" target="_blank">${txt}</a>`;
@@ -487,6 +492,7 @@ async function pick(id,type){
   const c=(d.production_countries||[])[0]?.name||(d.origin_country||[])[0]||'';setv('f_country',CMAP[c]||c);
   const dirs=tv?(d.created_by||[]).map(x=>x.name):((d.credits?.crew||[]).filter(x=>x.job==='Director').map(x=>x.name));setv('f_dir',dirs.join(', '));
   setv('f_cast',(d.credits?.cast||[]).slice(0,5).map(x=>x.name).join(', '));
+  G.cast=(d.credits?.cast||[]).filter(x=>x.profile_path).slice(0,10).map(x=>({n:x.name,r:x.character||'',p:'https://image.tmdb.org/t/p/w185'+x.profile_path}));
   setv('f_genres',mapG((d.genres||[]).map(g=>g.name)).join(', '));
   setv('f_story',d.overview||'');setv('f_status',tv?(d.status==='Ended'?'Completed':(d.status||'')):'');
   if(d.poster_path)setv('f_poster','https://image.tmdb.org/t/p/w780'+d.poster_path);
