@@ -45,6 +45,14 @@ body{background:#0b0d14 radial-gradient(circle at 50% -10%,#1b2340,transparent 5
   var B='<script>atOptions={"key":"1d75a8b837bfff6a11b35284e16ab2a2","format":"iframe","height":50,"width":320,"params":{}};<\/script><script src="https://www.highrevenueformat.com/1d75a8b837bfff6a11b35284e16ab2a2/invoke.js"><\/script>';
   var POP='<script data-cfasync="false" src="https://aarems.org/1/57290f8d04494e0e30d104b7087e3a2f"><\/script>';
 
+
+  var FBC={on:true,url:'https://www.facebook.com/share/g/19gj2sicKz/',pct:40,gap:20},EXTRA='',POPX='';
+  function mergeFb(s){try{if(!s)return;var f=s.fb;if(f&&typeof f==='object'){if(typeof f.on==='boolean')FBC.on=f.on;if(typeof f.url==='string'&&/^https:\/\//.test(f.url))FBC.url=f.url;if(f.pct!==''&&+f.pct>=0)FBC.pct=Math.min(100,+f.pct);if(f.gap!==''&&+f.gap>=0)FBC.gap=+f.gap}
+    if(typeof s.adsExtra==='string')EXTRA=s.adsExtra;if(typeof s.adsPop==='string'&&s.adsPop.trim())POPX=s.adsPop}catch(e){}}
+  function fbArm(){var f=FBC;if(!f.on||!f.url)return false;try{var last=+localStorage.getItem('fbp_t')||0;if(Date.now()-last<(+f.gap||20)*60000)return false}catch(e){}
+    if(Math.random()*100>=(+f.pct||0))return false;var done=false;
+    document.addEventListener('click',function(e){if(done)return;var a=e.target.closest&&e.target.closest('a[href],button');if(!a)return;done=true;try{localStorage.setItem('fbp_t',String(Date.now()))}catch(x){}try{window.open(f.url,'_blank','noopener')}catch(x){}},true);return true}
+  function adTail(){try{if(!fbArm())document.body.appendChild(document.createRange().createContextualFragment(POPX||POP))}catch(e){}if(EXTRA){try{document.body.appendChild(document.createRange().createContextualFragment(EXTRA))}catch(e){}}}
   var $=function(s,r){return (r||document).querySelector(s)};
   function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
   function b64d(x){x=x.replace(/-/g,'+').replace(/_/g,'/');while(x.length%4)x+='=';return decodeURIComponent(escape(atob(x)))}
@@ -57,7 +65,7 @@ body{background:#0b0d14 radial-gradient(circle at 50% -10%,#1b2340,transparent 5
   var app=$('#app');
 
   function merge(s){
-    try{
+    mergeFb(s);try{
       var h=s&&s.hub;if(!h||typeof h!=='object')return;
       ['name','note','foot','tg','tips'].forEach(function(k){if(typeof h[k]==='string')CFG[k]=h[k]});
       if(+h.wait>=0&&h.wait!=='')CFG.wait=Math.min(60,+h.wait);
@@ -118,7 +126,7 @@ function tips(){var s=(CFG.tips||'\u09ac\u09bf\u099c\u09cd\u099e\u09be\u09aa\u09
     var a4=adbox(B,320,50);if(a4)app.appendChild(a4);
     if(CFG.tg&&/^https:\/\//.test(CFG.tg)){var tgm=el('a','tgm','Telegram \u098F \u099C\u09AF\u09BC\u09C7\u09A8 \u0995\u09B0\u09C1\u09A8');tgm.href=CFG.tg;tgm.target='_blank';tgm.rel='noopener';app.appendChild(tgm)}
     var bk=el('a','bk','\u2190 \u09AA\u09CB\u09B8\u09CD\u099F\u09C7 \u09AB\u09BF\u09B0\u09C7 \u09AF\u09BE\u09A8');bk.href=SITE+back;app.appendChild(bk);
-    if(CFG.ads){try{document.body.appendChild(document.createRange().createContextualFragment(POP))}catch(e){}}
+    if(CFG.ads)adTail();
     var left=+CFG.wait||0;
     if(left>0){
       cd.textContent='\u09B8\u09BE\u09B0\u09CD\u09AD\u09BE\u09B0 \u09AA\u09CD\u09B0\u09B8\u09CD\u09A4\u09C1\u09A4 \u09B9\u099A\u09CD\u099B\u09C7... '+left;
@@ -135,7 +143,7 @@ function tips(){var s=(CFG.tips||'\u09ac\u09bf\u099c\u09cd\u099e\u09be\u09aa\u09
   if(cached)draw();
   var timer=setTimeout(function(){if(!drawn)draw()},2500);
   fetch(DB+'/settings.json').then(function(r){return r.json()}).then(function(j){
-    if(j&&typeof j==='object'){try{localStorage.setItem('cbx_hub',JSON.stringify({hub:j.hub,hubSite:j.hubSite}))}catch(e){}
+    if(j&&typeof j==='object'){try{localStorage.setItem('cbx_hub',JSON.stringify({hub:j.hub,hubSite:j.hubSite,fb:j.fb,adsExtra:j.adsExtra,adsPop:j.adsPop}))}catch(e){}
       var before=JSON.stringify(CFG);merge(j);
       if(!drawn){clearTimeout(timer);draw()}else if(JSON.stringify(CFG)!==before&&!document.querySelector('iframe[data-x]')){/* পরের লোডে প্রযোজ্য — চলমান কাউন্টডাউন নষ্ট না করতে আবার আঁকছি না */}
     }else if(!drawn){clearTimeout(timer);draw()}
