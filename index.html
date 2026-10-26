@@ -928,4 +928,106 @@ async function openEdit(kind,id,back){
   try{await loadLabels();d=await bapi(bb((kind==='post'?'posts/':'pages/')+id),{q:{view:'ADMIN'}})}
   catch(e){if(e.need)return renderConn('এডিট',()=>openEdit(kind,id,back));$('#main').innerHTML=errBox(e);return}
   const isP=kind==='post',live=(d.status||'').toUpperCase()==='LIVE';
-  $('#main').innerHTML=`${dl()}<div style="display:flex;gap:10px;align-items:center;margin-bottom:12px"><button class="btn gl sm" id="eb">← ফিরে যান</button><h2 class="t" style="margin:0;font-size:18px">${isP?'পোস্ট':'পেজ'} এডিট</h2>${stPill(d.status)}</div
+  $('#main').innerHTML=`${dl()}<div style="display:flex;gap:10px;align-items:center;margin-bottom:12px"><button class="btn gl sm" id="eb">← ফিরে যান</button><h2 class="t" style="margin:0;font-size:18px">${isP?'পোস্ট':'পেজ'} এডিট</h2>${stPill(d.status)}</div>
+  <div class="panel"><label class="f">টাইটেল</label><input id="e_title" value="${esc(d.title||'')}">
+  ${isP?`<label class="f">লেবেল (কমা দিয়ে)</label><input id="e_labels" list="lbl" value="${esc((d.labels||[]).join(', '))}"><div class="chk" id="e_chips" style="margin-top:8px">${['Trending','Featured','New Episode','18+'].map(c=>`<button type="button" class="btn sm ${(d.labels||[]).includes(c)?'':'gl'}" data-ch="${c}">${c}</button>`).join('')}</div>`:''}</div>
+  <div class="panel"><h3 class="s">ডাউনলোড লিংক এডিটর</h3><p class="hint" style="margin:-6px 0 8px">ডাউনলোড বাটনের লিংক, কোয়ালিটি ও সাইজ এখানে বদলান। নিচের HTML নিজে থেকে আপডেট হবে।</p><div id="e_links"></div></div>
+  <div class="panel ed"><h3 class="s">HTML</h3>${isP?'<div style="margin-bottom:10px"><button class="btn gl sm" id="e_cast" type="button">TMDB থেকে কাস্ট ছবি যোগ করুন</button> <span class="hint" id="e_castm"></span></div>':''}<textarea id="e_html" spellcheck="false"></textarea></div>
+  <div class="panel"><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="e_save">সেভ করুন</button>${isP&&!live?'<button class="btn ok" id="e_pub">সেভ ও পাবলিশ</button><span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><input type="datetime-local" id="e_sch" style="width:auto"><button class="btn gl" id="e_schb">শিডিউল করুন</button></span>':''}${isP&&live?'<button class="btn gl" id="e_tg">Telegram-এ পোস্ট</button>':''}${isP&&live?'<button class="btn gl" id="e_draft">Draft-এ নিন</button>':''}${d.url&&live?`<a class="btn gl" href="${esc(d.url)}" target="_blank" rel="noopener">সাইটে দেখুন</a>`:''}<button class="btn red" id="e_del">ডিলিট</button></div><div class="hint" id="e_msg"></div></div>`;
+  const ta=$('#e_html');ta.value=d.content||'';
+  const drawLinks=()=>{
+    const L=scanLinks(ta.value);
+    $('#e_links').innerHTML=L.length?L.map((x,i)=>`<div class="lk" data-i="${i}"><small>${esc(x.txt||('লিংক '+(i+1)))}</small><input data-f="q" placeholder="কোয়ালিটি" value="${esc(x.q)}"><input data-f="s" placeholder="সাইজ" value="${esc(x.s)}"><input data-f="href" placeholder="https://..." value="${esc(x.href)}"></div>`).join(''):'<p class="hint">এই লেখায় data-dl ডাউনলোড বাটন নেই।</p>';
+  };
+  drawLinks();
+  $('#e_links').oninput=e=>{
+    const t=e.target,row=t.closest('.lk');if(!row)return;
+    const L=scanLinks(ta.value),x=L[+row.dataset.i];if(!x)return;
+    const attr={q:'data-q',s:'data-s',href:'href'}[t.dataset.f];
+    ta.value=ta.value.slice(0,x.start)+setAttr(x.tag,attr,t.value.trim())+ta.value.slice(x.end);
+  };
+  ta.onchange=drawLinks;
+  if(isP&&$('#e_cast'))$('#e_cast').onclick=async()=>{
+    const m=$('#e_castm');m.textContent='খোঁজা হচ্ছে...';
+    try{
+      const t=$('#e_title').value,name=t.replace(/\s*[\[(].*$/,'').trim()||t,yr=(t.match(/\((\d{4})\)/)||[])[1],tv=/\bS\d{1,2}\b/i.test(t)||(splitL($('#e_labels').value).includes('Web Series'));
+      const pr={query:name};if(yr)pr[tv?'first_air_date_year':'year']=yr;
+      const r=await tmdb('/search/'+(tv?'tv':'movie'),pr),it=(r.results||[])[0];
+      if(!it){m.textContent='TMDB-তে এই নামে কিছু পাওয়া যায়নি';return}
+      const d=await tmdb(`/${tv?'tv':'movie'}/${it.id}`,{append_to_response:'credits'});
+      const c=(d.credits?.cast||[]).filter(x=>x.profile_path).slice(0,10).map(x=>({n:x.name,r:x.character||'',p:'https://image.tmdb.org/t/p/w185'+x.profile_path}));
+      if(!c.length){m.textContent='"'+(d.title||d.name)+'" এর কাস্ট ছবি পাওয়া যায়নি';return}
+      ta.value=setCast(ta.value,c);m.textContent='"'+(d.title||d.name)+'" থেকে '+c.length+' জন যোগ হয়েছে। এখন সেভ করুন।';
+    }catch(e){m.textContent='হয়নি: '+(e.message||e)+' (নতুন পোস্ট ট্যাবে TMDB Key দেওয়া আছে কি?)'}
+  };
+  if(isP){
+    $('#e_chips').onclick=e=>{const b=e.target.closest('[data-ch]');if(!b)return;const inp=$('#e_labels'),c=b.dataset.ch,L=splitL(inp.value),i=L.indexOf(c);i>=0?L.splice(i,1):L.push(c);inp.value=L.join(', ');b.classList.toggle('gl',i>=0)};
+    $('#e_labels').oninput=()=>{const L=splitL($('#e_labels').value);$$('#e_chips [data-ch]').forEach(b=>b.classList.toggle('gl',!L.includes(b.dataset.ch)))};
+  }
+  $('#eb').onclick=()=>go(back||(isP?'posts':'pages'));
+  const save=async pub=>{
+    const m=$('#e_msg');m.textContent='সেভ হচ্ছে...';
+    try{
+      const body={title:$('#e_title').value.trim(),content:ta.value};if(isP){body.labels=splitL($('#e_labels').value);
+        const yt=(body.content.match(/youtube(?:-nocookie)?\.com\/embed\/([\w-]{6,15})/)||[])[1];
+        if(yt&&!/\[\[T:/.test(body.content)&&/\[\[P:\S+?\]\]/.test(body.content))body.content=body.content.replace(/(\[\[P:\S+?\]\])/,'$1[[T:'+yt+']]');}
+      await bapi(bb((isP?'posts/':'pages/')+id),{method:'PATCH',body});
+      if(pub)await bapi(bb('posts/'+id+'/publish'),{method:'POST'});
+      LABELS=null;m.textContent='সেভ হয়েছে ✓';toast(pub?'সেভ ও পাবলিশ হয়েছে':'সেভ হয়েছে');if(pub)openEdit(kind,id,back);
+    }catch(e){m.textContent='হয়নি: '+(e.message||e);if(e.need)toast('আবার সংযুক্ত হয়ে সেভ করুন',1)}
+  };
+  $('#e_save').onclick=()=>save(false);
+  if($('#e_pub'))$('#e_pub').onclick=()=>save(true);
+  if($('#e_schb'))$('#e_schb').onclick=async()=>{const v=$('#e_sch').value;if(!v)return toast('তারিখ ও সময় বাছুন',1);const t=new Date(v);if(!(t>new Date()))return toast('ভবিষ্যতের সময় দিন',1);
+    try{await save(false);await bapi(bb('posts/'+id+'/publish'),{method:'POST',q:{publishDate:t.toISOString()}});toast('শিডিউল হয়েছে: '+t.toLocaleString('bn-BD'));openEdit(kind,id,back)}catch(e){toast('হয়নি: '+(e.message||e),1)}};
+  if($('#e_tg'))$('#e_tg').onclick=async()=>{try{await tgSend({title:$('#e_title').value,url:d.url,content:ta.value,labels:splitL($('#e_labels').value)});toast('Telegram-এ গেছে ✓')}catch(e){toast('হয়নি: '+(e.message||e),1)}};
+  if($('#e_draft'))$('#e_draft').onclick=async()=>{try{await bapi(bb('posts/'+id+'/revert'),{method:'POST'});toast('Draft-এ নেওয়া হয়েছে');openEdit(kind,id,back)}catch(e){toast('হয়নি: '+(e.message||e),1)}};
+  $('#e_del').onclick=async()=>{
+    if(!confirm('ডিলিট করবেন? "'+(d.title||'')+'"\nএটা ফেরানো যাবে না।'))return;
+    try{await bapi(bb((isP?'posts/':'pages/')+id),{method:'DELETE'});PS.items=PS.items.filter(x=>x.id!==id);toast('ডিলিট হয়েছে');go(back||(isP?'posts':'pages'))}catch(e){toast('হয়নি: '+(e.message||e),1)}
+  };
+}
+
+/* ---------------- pages manager ---------------- */
+async function vPages(){
+  if(!bOn())return renderConn('পেজ ম্যানেজার',vPages);
+  $('#main').innerHTML=`<h2 class="t">পেজ ম্যানেজার</h2><div class="panel" style="display:flex;gap:8px"><input id="np" placeholder="নতুন পেজের নাম"><button class="btn" id="npb">নতুন পেজ</button></div>
+  <div class="panel"><h3 class="s">ডিফল্ট পেজ একসাথে বানান</h3><p class="hint">About, Contact, DMCA, Privacy, Disclaimer, How to Download ও Request — ৭টা পেজ লেখাসহ তৈরি হবে এবং সাইটের মেনু/ফুটারের লিংক আপনা-আপনি ঠিক হয়ে যাবে। যেগুলো আগেই আছে সেগুলো বাদ যাবে। (ফাঁকা পেজ খুললে কিছুই দেখায় না, তাই লেখা দরকার।)</p><button class="btn" id="npd">৭টা ডিফল্ট পেজ বানান</button><div class="hint" id="npm"></div></div><div id="pgl"><div class="skl"></div></div>`;
+  let items=[];
+  const draw=()=>{$('#pgl').innerHTML=items.map(p=>`<div class="item" data-id="${esc(p.id)}"><div class="h"><div><b>${esc(p.title||'(নামহীন)')}</b> ${stPill(p.status)}<br><small>${esc((p.url||'').replace(/^https?:\/\/[^\/]+/,''))} • ${when(p.updated)}</small></div></div><div class="acts"><button class="btn gl sm" data-a="edit">এডিট</button>${p.url?`<a class="btn gl sm" href="${esc(p.url)}" target="_blank" rel="noopener">দেখুন</a>`:''}<button class="btn gl sm" data-a="menu">মেনুতে যোগ</button><button class="btn red sm" data-a="del">ডিলিট</button></div></div>`).join('')||'<p class="hint">কোনো পেজ নেই।</p>'};
+  try{const j=await bapi(bb('pages'),{q:{fetchBodies:false,status:['live','draft'],view:'ADMIN'}});items=j.items||[];draw()}
+  catch(e){if(e.need)return renderConn('পেজ ম্যানেজার',vPages);$('#pgl').innerHTML=errBox(e);return}
+  $('#npd').onclick=async()=>{
+    const m=$('#npm'),st=(await get(ref(db,'settings'))).val()||{},have=items.map(p=>(p.title||'').trim().toLowerCase());let n=0;m.textContent='তৈরি হচ্ছে...';
+    try{
+      for(const [title,html] of Object.entries(PAGE_TPL)){
+        let u=(items.find(p=>(p.title||'').trim().toLowerCase()===title.toLowerCase())||{}).url||'';
+        if(!u){const c=html.replace(/YOUR_EMAIL/g,st.email||'you@example.com').replace(/YOUR_CHANNEL/g,(st.telegram||'').replace(/^https?:\/\/t\.me\//,'')||'YOUR_CHANNEL').replace(/YOUR_PAGE/g,(st.facebook||'').replace(/^https?:\/\/(www\.)?facebook\.com\//,'')||'YOUR_PAGE');
+          const r=await bapi(bb('pages'),{method:'POST',body:{kind:'blogger#page',title,content:c}});u=r.url||'';n++;items.push(r)}
+        u=u.replace(/^https?:\/\/[^\/]+/,'');if(!u)continue;
+        if(title==='How to Download')await upSite({howTo:u});
+        else if(title==='Request Movie')await upSite({requestUrl:u});
+        else await addToMenu(({'About Us':'আমাদের সম্পর্কে','Contact':'যোগাযোগ','DMCA':'DMCA','Privacy Policy':'প্রাইভেসি পলিসি','Disclaimer':'ডিসক্লেইমার'})[title],u);
+      }
+      draw();m.textContent=n+'টা নতুন পেজ তৈরি হয়েছে, মেনু ঠিক করা হয়েছে ✓';
+    }catch(e){m.textContent='হয়নি: '+(e.message||e)}
+  };
+  $('#npb').onclick=async()=>{const t=$('#np').value.trim();if(!t)return;try{const r=await bapi(bb('pages'),{method:'POST',body:{kind:'blogger#page',title:t,content:''}});openEdit('page',r.id,'pages')}catch(e){toast('হয়নি: '+(e.message||e),1)}};
+  $('#main').onclick=async e=>{
+    const a=e.target.closest('[data-a]');if(!a)return;const id=a.closest('.item').dataset.id,p=items.find(x=>x.id===id);
+    if(a.dataset.a==='edit')return openEdit('page',id,'pages');
+    if(a.dataset.a==='menu'){try{await addToMenu(p.title,(p.url||'').replace(/^https?:\/\/[^\/]+/,''));toast('মেনু/ফুটারে যোগ হয়েছে')}catch(er){toast('হয়নি: '+(er.message||er),1)}return}
+    if(!confirm('"'+(p.title||'')+'" পেজ ডিলিট করবেন?'))return;
+    try{await bapi(bb('pages/'+id),{method:'DELETE'});items=items.filter(x=>x.id!==id);draw();toast('ডিলিট হয়েছে')}catch(err){toast('হয়নি: '+(err.message||err),1)}
+  };
+}
+
+/* ---------------- boot ---------------- */
+onAuthStateChanged(auth,async u=>{
+  if(!u)return showLogin();
+  try{const s=await get(ref(db,'admins/'+u.uid));if(s.val()!==true)return showDenied(u)}catch{return showDenied(u)}
+  showApp(u);
+});
+</script>
+</body>
+</html>
