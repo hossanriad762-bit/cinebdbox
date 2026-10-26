@@ -153,7 +153,7 @@ function showDenied(u){
 }
 
 /* ---------------- shell ---------------- */
-const TABS=[['dash','▦','ড্যাশবোর্ড'],['posts','☰','পোস্ট'],['gen','✎','নতুন পোস্ট'],['pages','❏','পেজ'],['req','✉','রিকোয়েস্ট'],['rep','⚑','রিপোর্ট'],['hub','☁','ডাউনলোড হাব'],['soon','⏳','আসছে'],['short','🔗','শর্টনার'],['site','🌐','সাইট ও মেনু'],['ads','📢','বিজ্ঞাপন সময়'],['cmt','💬','কমেন্ট'],['tools','🧰','টুলস'],['set','⚙','সেটিংস']];
+const TABS=[['dash','▦','ড্যাশবোর্ড'],['posts','☰','পোস্ট'],['gen','✎','নতুন পোস্ট'],['pages','❏','পেজ'],['req','✉','রিকোয়েস্ট'],['rep','⚑','রিপোর্ট'],['hub','☁','ডাউনলোড হাব'],['soon','⏳','আসছে'],['short','🔗','শর্টনার'],['site','🌐','সাইট ও মেনু'],['ads','📢','বিজ্ঞাপন সময়'],['media','🖼','মিডিয়া আপলোড'],['cmt','💬','কমেন্ট'],['tools','🧰','টুলস'],['set','⚙','সেটিংস']];
 let cur='dash';
 function showApp(u){
   app$().innerHTML=`<div class="shell"><nav class="side"><div class="logo">Cine<em>bdbox</em></div>
@@ -169,7 +169,7 @@ function go(t){
   cur=t;location.hash=t;
   $$('.side a[data-t]').forEach(a=>a.classList.toggle('on',a.dataset.t===t));
   $('#main').innerHTML='<div class="skl"></div><div class="skl"></div>';
-  ({dash:vDash,posts:vPosts,gen:vGen,pages:vPages,req:vReq,rep:vRep,hub:vHub,cmt:vCmt,tools:vTools,site:vSite,ads:vAds,short:vShort,soon:vSoon,set:vSet}[t])().catch(e=>{$('#main').innerHTML=`<div class="panel"><b>সমস্যা হয়েছে</b><p class="hint">${esc(e.message||e)}</p><p class="hint">Firebase Rules (firebase-rules.json) Publish করা আছে কিনা দেখুন।</p></div>`});
+  ({dash:vDash,posts:vPosts,gen:vGen,pages:vPages,req:vReq,rep:vRep,hub:vHub,cmt:vCmt,tools:vTools,site:vSite,ads:vAds,media:vMedia,short:vShort,soon:vSoon,set:vSet}[t])().catch(e=>{$('#main').innerHTML=`<div class="panel"><b>সমস্যা হয়েছে</b><p class="hint">${esc(e.message||e)}</p><p class="hint">Firebase Rules (firebase-rules.json) Publish করা আছে কিনা দেখুন।</p></div>`});
 }
 
 /* ---------------- dashboard ---------------- */
@@ -303,7 +303,19 @@ async function vAds(){
   const s=(await get(ref(db,'settings'))).val()||{},sc=s.sched||{},sm=s.smart||{};
   const nowOn=k=>{const x=sc[k];if(!x||!x.use)return true;const n=Date.now(),h=new Date().getHours();if(x.from&&n<new Date(x.from).getTime())return false;if(x.to&&n>new Date(x.to).getTime())return false;
     if(x.h1!==''&&x.h2!==''&&x.h1!=null&&x.h2!=null){const a=+x.h1,b=+x.h2;if(a<b){if(h<a||h>=b)return false}else if(a>b){if(h<a&&h>=b)return false}}return true};
+  const slots=s.slots||{},ban=SLOTS.filter(x=>slots[x[0]]!=='__off').length,fbp=(s.fb&&s.fb.on!==false)?(s.fb.pct==null?40:+s.fb.pct):0;
+  const tips=[];
+  if(s.adsOn===false)tips.push(['bad','বিজ্ঞাপন পুরোপুরি বন্ধ আছে (সেটিংসে "বিজ্ঞাপন চালু" টিক দিন)।']);
+  if(ban>3)tips.push(['warn',ban+'টা ব্যানার জায়গা চালু। অনেক ব্যানারে পেজ ধীর হয় আর ইনকাম বাড়ে না। ২–৩টা ভালো জায়গা রাখুন, বাকি বন্ধ করুন।']);
+  if(fbp>15)tips.push(['warn','Facebook প্রমো '+fbp+'% ভিজিটে পপআন্ডারের জায়গা নিচ্ছে। ওই ভিজিটগুলোতে Adsterra-র পপআন্ডার চলে না, তাই ইনকাম কমে। ১০% বা কম রাখুন।']);
+  if(!(s.smart&&s.smart.on&&s.smart.url))tips.push(['warn','Smart Link বসানো নেই। Adsterra থেকে Direct/Smart Link নিয়ে নিচে বসালে বাড়তি ইনকামের পথ হয়।']);
+  if(!(s.adsExtra||'').trim())tips.push(['warn','Social Bar / Native Banner কোড বসানো নেই। Adsterra ড্যাশবোর্ডে Social Bar বানিয়ে সেটিংসের "অতিরিক্ত স্ক্রিপ্ট" ঘরে বসান। এটা মোবাইলে ভালো কাজ করে।']);
+  if(!(s.adsPop||'').trim())tips.push(['warn','পপআন্ডার কোড সেটিংসে সেভ করা নেই (থিমের ডিফল্টটা চলছে)। নিজের কোড সেভ করে রাখা ভালো।']);
   $('#main').innerHTML=`<h2 class="t">বিজ্ঞাপন: সময়সূচি ও Smart Link</h2>
+  <div class="panel"><h3 class="s">💰 ইনকাম চেকআপ</h3>${tips.map(x=>`<p class="hint" style="color:${x[0]==='bad'?'#ff8fa5':'#ffc857'}">• ${esc(x[1])}</p>`).join('')||'<p class="hint" style="color:#6df0b0">সেটিংস ঠিক আছে।</p>'}
+   <p class="hint">কেন $০ দেখাতে পারে: (১) Adsterra-র স্ট্যাটাসে ১২–২৪ ঘণ্টা দেরি হয়। (২) বাংলাদেশের ভিজিটের রেট কম (প্রতি হাজার ভিউয়ে সামান্য), তাই কম ট্রাফিকে ইনকাম খুব ছোট। (৩) অনেক ব্রাউজার/ডিএনএস বিজ্ঞাপন আটকায়, আর Facebook/Messenger-এর ভেতরের ব্রাউজারে পপআন্ডার চলে না। (৪) নিজের ক্লিকে ইনকাম হয় না, উল্টে অ্যাকাউন্ট ব্যান হতে পারে — নিজে কখনো নিজের বিজ্ঞাপনে ক্লিক করবেন না।</p>
+   <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="ad_inc">সব ব্যানার বন্ধ + ইনকাম মোড</button><button class="btn gl" id="ad_back">ব্যানার আগের মতো ফেরান</button></div>
+   <p class="hint">"ইনকাম মোড": সব ব্যানার বন্ধ হবে, শুধু পপআন্ডার, Social Bar/অতিরিক্ত স্ক্রিপ্ট ও Smart Link চলবে, Facebook প্রমো ১০%-এ নামবে। আপনার আগের স্লট কোড জমা থাকবে, "ফেরান" চাপলেই ফিরবে।</p></div>
   <div class="panel"><h3 class="s">Smart Link (Adsterra Direct/Smart Link)</h3><p class="hint">দর্শক কোনো লিংকে ক্লিক করলে মাঝে মাঝে নতুন ট্যাবে এই লিংক খুলবে (Facebook গ্রুপ প্রমোর মতোই; দুটো একসাথে খুললে আগে Facebook, না হলে Smart Link)। একই দর্শককে বারবার দেখানো হয় না।</p>
    <label class="f" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="sm_on" ${sm.on?'checked':''}> চালু</label>
    <label class="f">Smart Link URL</label><input id="sm_url" value="${esc(sm.url||'')}" placeholder="https://...">
@@ -313,11 +325,77 @@ async function vAds(){
     <div class="row2" style="margin-top:6px"><div><label class="f">শুরু (তারিখ-সময়)</label><input type="datetime-local" class="sf" value="${esc(x.from||'')}"></div><div><label class="f">শেষ (তারিখ-সময়)</label><input type="datetime-local" class="st" value="${esc(x.to||'')}"></div></div>
     <div class="row2"><div><label class="f">প্রতিদিন কখন থেকে (০–২৪ ঘণ্টা)</label><input type="number" min="0" max="24" class="h1" value="${esc(x.h1==null?'':x.h1)}" placeholder="যেমন 18"></div><div><label class="f">কখন পর্যন্ত</label><input type="number" min="0" max="24" class="h2" value="${esc(x.h2==null?'':x.h2)}" placeholder="যেমন 24"></div></div></div>`}).join('')}</div>
   <button class="btn" id="ad_sv">সেভ করুন</button>`;
+  $('#ad_inc').onclick=async()=>{if(!confirm('সব ব্যানার বন্ধ করে ইনকাম মোড চালু করবেন?'))return;const off={};SLOTS.forEach(x=>off[x[0]]='__off');
+    try{await update(ref(db,'settings'),{slotsBackup:slots,slots:off,adsOn:true,fb:{...(s.fb||{}),on:(s.fb||{}).on!==false,pct:Math.min(10,fbp||10),gap:(s.fb||{}).gap||60}});toast('ইনকাম মোড চালু');vAds()}catch(e){toast('হয়নি: '+(e.message||e),1)}};
+  $('#ad_back').onclick=async()=>{const b=s.slotsBackup;try{await update(ref(db,'settings'),{slots:(b&&Object.keys(b).length)?b:{}});toast('ফেরানো হয়েছে');vAds()}catch(e){toast('হয়নি: '+(e.message||e),1)}};
   $('#ad_sv').onclick=async()=>{
     const sched={};$$('#main .slr').forEach(r=>{const u=$('.su',r).checked;sched[r.dataset.k]={use:u,from:$('.sf',r).value,to:$('.st',r).value,h1:$('.h1',r).value,h2:$('.h2',r).value}});
     const url=$('#sm_url').value.trim();if(url&&!/^https:\/\//.test(url))return toast('Smart Link https:// দিয়ে শুরু হতে হবে',1);
     const smart={on:$('#sm_on').checked,url,pct:Math.max(0,Math.min(100,+$('#sm_pct').value||0)),gap:Math.max(0,+$('#sm_gap').value||0),when:$('#sm_when').value};
     try{await update(ref(db,'settings'),{sched,smart});toast('সেভ হয়েছে')}catch(e){toast('সেভ হয়নি: '+(e.message||e),1)}
+  };
+}
+
+
+/* ---------------- media upload (ছবি/ছোট ভিডিও → লিংক) ---------------- */
+const MH={get(){try{return JSON.parse(LS.get('media_h','[]'))}catch{return[]}},add(o){const a=MH.get();a.unshift(o);LS.set('media_h',JSON.stringify(a.slice(0,40)))}};
+const GH={repo:()=>LS.get('ghrepo','hossanriad762-bit/cinebdbox'),br:()=>LS.get('ghbr','main')};
+function resizeImg(file,maxW,q=.86){return new Promise((res,rej)=>{
+  if(!/^image\/(jpeg|png|webp)$/.test(file.type))return res(file);
+  const im=new Image(),u=URL.createObjectURL(file);
+  im.onload=()=>{URL.revokeObjectURL(u);const r=Math.min(1,maxW/im.width),c=document.createElement('canvas');c.width=Math.round(im.width*r);c.height=Math.round(im.height*r);c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+    c.toBlob(b=>b?res(new File([b],file.name.replace(/\.\w+$/,'')+'.jpg',{type:'image/jpeg'})):res(file),'image/jpeg',q)};
+  im.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('ছবি পড়া যায়নি'))};im.src=u})}
+const b64file=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=()=>rej(new Error('ফাইল পড়া যায়নি'));r.readAsDataURL(f)});
+async function upImgbb(file){
+  const k=LS.get('imgbb');if(!k)throw new Error('ImgBB কী দেওয়া নেই (মিডিয়া ট্যাবে বসান)');
+  const fd=new FormData();fd.append('image',file);
+  const r=await fetch('https://api.imgbb.com/1/upload?key='+encodeURIComponent(k),{method:'POST',body:fd}),j=await r.json().catch(()=>({}));
+  if(!r.ok||!j.data)throw new Error((j.error&&j.error.message)||('ImgBB ত্রুটি '+r.status));return j.data.url;
+}
+async function upGithub(file){
+  const tk=LS.get('ghtok');if(!tk)throw new Error('GitHub টোকেন দেওয়া নেই (মিডিয়া ট্যাবে বসান)');
+  if(file.size>25*1048576)throw new Error('GitHub-এ ২৫MB-এর বেশি ফাইল আপলোড করা যাবে না');
+  const nm=new Date().toISOString().slice(0,10)+'-'+Math.random().toString(36).slice(2,6)+'-'+file.name.replace(/[^\w.-]+/g,'_').slice(-60),path='media/'+nm;
+  const r=await fetch('https://api.github.com/repos/'+GH.repo()+'/contents/'+path,{method:'PUT',headers:{Authorization:'Bearer '+tk,Accept:'application/vnd.github+json'},body:JSON.stringify({message:'upload '+nm,content:await b64file(file),branch:GH.br()})});
+  const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.message||('GitHub ত্রুটি '+r.status));
+  return 'https://cdn.jsdelivr.net/gh/'+GH.repo()+'@'+GH.br()+'/'+path;
+}
+async function uploadAny(file,{poster=false}={}){
+  const isImg=/^image\//.test(file.type);
+  if(isImg){file=await resizeImg(file,poster?780:1280);
+    if(LS.get('imgbb')){try{return await upImgbb(file)}catch(e){if(!LS.get('ghtok'))throw e}}
+    return upGithub(file)}
+  return upGithub(file);
+}
+function bindPick(){
+  $$('[data-up]').forEach(b=>{if(b._b)return;b._b=1;b.onchange=async()=>{
+    const fl=b.files[0];if(!fl)return;const tg=b.dataset.up,lab=b.parentNode;const old=lab.firstChild.textContent;lab.firstChild.textContent='আপলোড হচ্ছে... ';
+    try{const u=await uploadAny(fl,{poster:tg==='f_poster'});$('#'+tg).value=u;MH.add({u,n:fl.name,t:Date.now()});if(typeof build==='function')build();toast('আপলোড হয়েছে, লিংক বসেছে')}catch(e){toast('হয়নি: '+(e.message||e),1)}
+    lab.firstChild.textContent=old;b.value=''}});
+}
+async function vMedia(){
+  const st=(await get(ref(db,'settings/player'))).val()||'https://hossanriad762-bit.github.io/cinebdbox/watch/';
+  const draw=()=>{$('#md_l').innerHTML=MH.get().map(x=>/\.(mp4|webm|m4v)(\?|$)/i.test(x.u)?`<div class="item"><b>${esc(x.n)}</b><br><small>${esc(x.u)}</small><div class="acts"><button class="btn gl sm" data-cp="${esc(x.u)}">লিংক কপি</button></div></div>`:`<div class="item" style="display:flex;gap:10px;align-items:center"><img src="${esc(x.u)}" style="width:54px;height:80px;object-fit:cover;border-radius:8px" alt=""><div style="flex:1;min-width:0"><b>${esc(x.n)}</b><br><small style="word-break:break-all">${esc(x.u)}</small><div class="acts"><button class="btn gl sm" data-cp="${esc(x.u)}">লিংক কপি</button></div></div></div>`).join('')||'<p class="hint">এখনো কিছু আপলোড করা হয়নি।</p>'};
+  $('#main').innerHTML=`<h2 class="t">মিডিয়া আপলোড</h2><p class="hint" style="margin:-8px 0 14px">TMDB-তে পোস্টার না পেলে এখানে ছবি আপলোড করে লিংক নিন। ছবি অটো ছোট করা হয়। সেই লিংক "নতুন পোস্ট"-এর পোস্টার ঘরে বসান (সেখানেও 📤 বাটন আছে)।</p>
+  <div class="panel"><h3 class="s">ছবি/ভিডিও আপলোড</h3><label class="btn" style="cursor:pointer;display:inline-block">ফাইল বাছুন<input type="file" id="md_f" accept="image/*,video/mp4,video/webm" multiple style="display:none"></label>
+   <label class="f" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="md_p" checked> পোস্টার হিসেবে ছোট করুন (৭৮০px চওড়া)</label><div class="hint" id="md_m"></div></div>
+  <div id="md_l"></div>
+  <div class="panel"><h3 class="s">ছবির জন্য: ImgBB (সবচেয়ে সহজ, ফ্রি)</h3><p class="hint">১) imgbb.com-এ ফ্রি অ্যাকাউন্ট → ২) api.imgbb.com খুলে "Get API key" → ৩) কী এখানে বসান। ছবি ImgBB-তে থাকবে, লিংক সবসময় চলবে।</p><input id="md_ik" value="${esc(LS.get('imgbb'))}" placeholder="ImgBB API key"></div>
+  <div class="panel"><h3 class="s">ছবি ও ছোট ভিডিওর জন্য: GitHub (ফ্রি, ২৫MB পর্যন্ত)</h3><p class="hint">আপনার GitHub রিপোতেই ফাইল জমবে। টোকেন বানাতে: GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate → Repository access: শুধু <b>cinebdbox</b> → Permissions → Contents: <b>Read and write</b>। টোকেন শুধু এই ব্রাউজারে থাকে।</p>
+   <div class="row2"><div><label class="f">রিপো (মালিক/নাম)</label><input id="md_gr" value="${esc(GH.repo())}"></div><div><label class="f">ব্রাঞ্চ</label><input id="md_gb" value="${esc(GH.br())}"></div></div><label class="f">টোকেন</label><input id="md_gt" type="password" value="${esc(LS.get('ghtok'))}" placeholder="github_pat_..."></div>
+  <div class="panel"><h3 class="s">অনলাইনে দেখার প্লেয়ার</h3><p class="hint">পোস্টের "অনলাইনে দেখুন" লিংক যদি সরাসরি ভিডিও ফাইল (.mp4 / .webm / .m3u8, https) হয়, দর্শক সাইটের নিজস্ব প্লেয়ারে দেখবে (ফুলস্ক্রিন, VLC-তে খোলার বাটনসহ)। প্লেয়ার পেজটি <code>watch/index.html</code> নামে GitHub-এ দিতে হবে।</p><input id="md_pl" value="${esc(st)}"></div>
+  <button class="btn" id="md_sv">সেভ করুন</button>
+  <div class="panel" style="margin-top:14px"><h3 class="s">ভিডিও হোস্টিং নিয়ে সত্যি কথা</h3><p class="hint">বড় ভিডিও (মুভি) নিজের জন্য হোস্ট করা ব্যয়বহুল (ব্যান্ডউইথ), আর বিনামূল্যের GitHub/ImgBB ভিডিও সার্ভার নয়। কপিরাইটের মুভি নিজে হোস্ট করলে DMCA-তে ব্লগ/হোস্ট দুটোই বন্ধ হতে পারে। যা নিরাপদ: নিজের বানানো ক্লিপ বা ট্রেলার (YouTube-এ আনলিস্টেড দিয়ে লিংক বসান), আর অনুমতি আছে এমন ভিডিও ২৫MB-এর মধ্যে এখানে, বড়গুলো Cloudflare R2 / Bunny বা অন্য পেইড স্টোরেজে রেখে সরাসরি লিংক এখানে বসান।</p></div>`;
+  draw();
+  const save=()=>{LS.set('imgbb',$('#md_ik').value.trim());LS.set('ghrepo',$('#md_gr').value.trim());LS.set('ghbr',$('#md_gb').value.trim()||'main');LS.set('ghtok',$('#md_gt').value.trim())};
+  $('#md_sv').onclick=async()=>{save();const pl=$('#md_pl').value.trim();if(pl&&!/^https:\/\//.test(pl))return toast('প্লেয়ার লিংক https:// দিয়ে শুরু হতে হবে',1);try{await update(ref(db,'settings'),{player:pl});toast('সেভ হয়েছে')}catch(e){toast('সেভ হয়নি: '+(e.message||e),1)}};
+  $('#md_l').onclick=e=>{const b=e.target.closest('[data-cp]');if(b){copy(b.dataset.cp);toast('কপি হয়েছে')}};
+  $('#md_f').onchange=async e=>{
+    save();const m=$('#md_m');
+    for(const fl of [...e.target.files]){m.textContent='আপলোড হচ্ছে: '+fl.name+' ...';
+      try{const u=await uploadAny(fl,{poster:$('#md_p').checked});MH.add({u,n:fl.name,t:Date.now()});draw();m.textContent='হয়েছে ✓ '+fl.name}catch(er){m.textContent='হয়নি ('+fl.name+'): '+(er.message||er);break}}
+    e.target.value='';
   };
 }
 
@@ -531,7 +609,7 @@ async function vGen(){
     <div class="row3">${inp('f_rating','IMDb রেটিং','7.8')}${inp('f_votes','ভোট সংখ্যা','250K')}${inp('f_runtime','সময়কাল (মিনিট) / সিরিজে এপিসোড','135')}</div>
     <div class="row2">${inp('f_dir','ডিরেক্টর')}${inp('f_status','স্ট্যাটাস (সিরিজ)','Completed')}</div>
     ${inp('f_cast','কাস্ট','Actor 1, Actor 2')}<label class="f" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="f_castph" checked> কাস্টের ছবিসহ কার্ড দেখান (TMDB থেকে আনলে)</label>${inp('f_genres','জনরা (কমা দিয়ে)','Action, Thriller')}
-    ${inp('f_poster','পোস্টার লিংক (2:3)','https://...')}
+    ${inp('f_poster','পোস্টার লিংক (2:3)','https://...')}<label class="btn gl sm" style="cursor:pointer;display:inline-block;margin:6px 0">📤 পোস্টার আপলোড করুন<input type="file" accept="image/*" data-up="f_poster" style="display:none"></label>
     <div class="row3">${inp('f_s1','স্ক্রিনশট ১')}${inp('f_s2','স্ক্রিনশট ২')}${inp('f_s3','স্ক্রিনশট ৩')}</div>
     <div class="row2">${inp('f_trailer','ট্রেইলার (YouTube ID বা লিংক)')}${inp('f_stream','অনলাইনে দেখার লিংক (ঐচ্ছিক)')}</div>
     <label class="f">গল্পসংক্ষেপ</label><textarea id="f_story"></textarea></div>
@@ -553,7 +631,7 @@ async function vGen(){
     <textarea id="bk_l" style="min-height:110px" placeholder="Pushpa 2 (2024)&#10;Money Heist | tv&#10;Animal (2023)"></textarea>
     <button class="btn" id="bk_go" style="margin-top:8px">বাল্ক তৈরি শুরু</button><div id="bk_log" class="hint" style="margin-top:8px"></div></div>`);
   $('#bk_go').onclick=bulkCreate;
-  bindGen();renderLists();build();
+  bindGen();renderLists();build();bindPick();
   {const pq=LS.get('prefq');if(pq){LS.set('prefq','');$('#gq').value=pq;if(LS.get('tmdb'))$('#gs').click()}}
 }
 
