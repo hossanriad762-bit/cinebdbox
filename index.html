@@ -153,7 +153,7 @@ function showDenied(u){
 }
 
 /* ---------------- shell ---------------- */
-const TABS=[['dash','▦','ড্যাশবোর্ড'],['posts','☰','পোস্ট'],['gen','✎','নতুন পোস্ট'],['pages','❏','পেজ'],['req','✉','রিকোয়েস্ট'],['rep','⚑','রিপোর্ট'],['hub','☁','ডাউনলোড হাব'],['soon','⏳','আসছে'],['short','🔗','শর্টনার'],['cmt','💬','কমেন্ট'],['tools','🧰','টুলস'],['set','⚙','সেটিংস']];
+const TABS=[['dash','▦','ড্যাশবোর্ড'],['posts','☰','পোস্ট'],['gen','✎','নতুন পোস্ট'],['pages','❏','পেজ'],['req','✉','রিকোয়েস্ট'],['rep','⚑','রিপোর্ট'],['hub','☁','ডাউনলোড হাব'],['soon','⏳','আসছে'],['short','🔗','শর্টনার'],['site','🌐','সাইট ও মেনু'],['ads','📢','বিজ্ঞাপন সময়'],['cmt','💬','কমেন্ট'],['tools','🧰','টুলস'],['set','⚙','সেটিংস']];
 let cur='dash';
 function showApp(u){
   app$().innerHTML=`<div class="shell"><nav class="side"><div class="logo">Cine<em>bdbox</em></div>
@@ -169,7 +169,7 @@ function go(t){
   cur=t;location.hash=t;
   $$('.side a[data-t]').forEach(a=>a.classList.toggle('on',a.dataset.t===t));
   $('#main').innerHTML='<div class="skl"></div><div class="skl"></div>';
-  ({dash:vDash,posts:vPosts,gen:vGen,pages:vPages,req:vReq,rep:vRep,hub:vHub,cmt:vCmt,tools:vTools,short:vShort,soon:vSoon,set:vSet}[t])().catch(e=>{$('#main').innerHTML=`<div class="panel"><b>সমস্যা হয়েছে</b><p class="hint">${esc(e.message||e)}</p><p class="hint">Firebase Rules (firebase-rules.json) Publish করা আছে কিনা দেখুন।</p></div>`});
+  ({dash:vDash,posts:vPosts,gen:vGen,pages:vPages,req:vReq,rep:vRep,hub:vHub,cmt:vCmt,tools:vTools,site:vSite,ads:vAds,short:vShort,soon:vSoon,set:vSet}[t])().catch(e=>{$('#main').innerHTML=`<div class="panel"><b>সমস্যা হয়েছে</b><p class="hint">${esc(e.message||e)}</p><p class="hint">Firebase Rules (firebase-rules.json) Publish করা আছে কিনা দেখুন।</p></div>`});
 }
 
 /* ---------------- dashboard ---------------- */
@@ -251,6 +251,73 @@ async function vRep(){
       catch(err){return toast('পোস্ট পাওয়া যায়নি: '+(err.message||err),1)}
     }
     try{await remove(ref(db,'reports/'+k));{const x=all.find(i=>i.k===k);if(x&&x.u)await update(ref(db,'lstat/'+pk(x.u)),{b:0,ok:Date.now()}).catch(()=>{})}all.splice(all.findIndex(i=>i.k===k),1);draw()}catch(err){toast('হয়নি: '+(err.message||err),1)}
+  };
+}
+
+
+const SITE_DEF={"categories": "Bangla | বাংলা মুভি\nHindi | হিন্দি মুভি\nHollywood | হলিউড মুভি\nSouth Indian | সাউথ ইন্ডিয়ান\nHindi Dubbed | হিন্দি ডাবড\nDual Audio | ডুয়াল অডিও\nKorean | কোরিয়ান\nWeb Series | ওয়েব সিরিজ\nAnimation | এনিমেশন", "genres": "Action | অ্যাকশন | 🔥\nAdventure | অ্যাডভেঞ্চার | 🧭\nAnimation | এনিমেশন | ✨\nComedy | কমেডি | 😂\nCrime | ক্রাইম | 🕵\nDrama | ড্রামা | 🎭\nFantasy | ফ্যান্টাসি | 🧙\nHorror | হরর | 👻\nMystery | মিস্ট্রি | 🔍\nRomance | রোমান্স | 💖\nSci-Fi | সাই-ফাই | 🚀\nThriller | থ্রিলার | ⚡\nWar | ওয়ার | 🪖\nFamily | ফ্যামিলি | 👨‍👩‍👧\nBiography | বায়োগ্রাফি | 📖\nDocumentary | ডকুমেন্টারি | 🎥", "rows": "Hollywood | 🎬 হলিউড মুভি\nHindi | 🇮🇳 বলিউড / হিন্দি\nBangla | 🇧🇩 বাংলা মুভি\nSouth Indian | 🌴 সাউথ ইন্ডিয়ান\nWeb Series | 📺 ওয়েব সিরিজ\nAnimation | ✨ এনিমেশন", "countries": "India | ভারত\nUSA | আমেরিকা\nBangladesh | বাংলাদেশ\nKorea | কোরিয়া\nJapan | জাপান\nUK | যুক্তরাজ্য\nChina | চীন\nTurkey | তুরস্ক", "platforms": "Netflix | Netflix | #e50914\nAmazon Prime | Prime Video | #00a8e1\nHotstar | Hotstar | #1f80e0\nZee5 | ZEE5 | #8230c6\nSonyLIV | SonyLIV | #ff6a00\nApple TV | Apple TV+ | #666\nHBO | HBO Max | #5822b4\nChorki | Chorki | #e91e63", "collections": "MCU | Marvel (MCU)\nDC | DC Universe\nFast and Furious | Fast & Furious\nJohn Wick | John Wick\nHarry Potter | Harry Potter\nMission Impossible | Mission Impossible", "pages": "আমাদের সম্পর্কে | /p/about.html\nযোগাযোগ | /p/contact.html\nDMCA | /p/dmca.html\nপ্রাইভেসি পলিসি | /p/privacy-policy.html\nডিসক্লেইমার | /p/disclaimer.html", "extraMenu": "", "years": "2026, 2025, 2024, 2023, 2022, 2021, 2020", "qualities": "4K, 1080p, 720p, 480p, WEB-DL, BluRay, HDRip, HDTC", "langs": "Bangla Dubbed, Hindi Dubbed, Dual Audio, Hindi, Bangla, English, Korean, Tamil, Telugu", "hero": "Featured", "trending": "Trending", "howTo": "/p/how-to-download.html", "requestUrl": "/p/request.html", "disclaimer": "এই সাইটে প্রদর্শিত পোস্টার, নাম ও কনটেন্টের সকল স্বত্ব নিজ নিজ মালিকের। কপিরাইট সংক্রান্ত কোনো অভিযোগ থাকলে ইমেইলে জানান, দ্রুত ব্যবস্থা নেওয়া হবে। বিজ্ঞাপন বা বেটিং সাইটের লিংকে ক্লিক করার দায় ব্যবহারকারীর।", "heroCount": 6, "adultLabel": "18+", "brand1": "Cine", "brand2": "bdbox", "pri": "#ff2d55", "pri2": "#ff7a45", "fx": "full", "footText": "সর্বশেষ মুভি, ওয়েব সিরিজ ও এনিমেশনের তথ্য, রিভিউ এবং লিংক এক জায়গায়। প্রতিদিন নতুন কনটেন্ট আপডেট হয়।"};
+const PAGE_TPL={"How to Download": "<h3>কীভাবে ডাউনলোড করবেন</h3>\n<ol>\n  <li>পছন্দের মুভি বা সিরিজের পোস্ট খুলুন।</li>\n  <li>নিচে ডাউনলোড বক্সে আপনার কোয়ালিটি (480p / 720p / 1080p) বেছে নিন।</li>\n  <li>\"ডাউনলোড\" বাটনে ক্লিক করে নতুন পেজের নির্দেশনা অনুসরণ করুন।</li>\n  <li>লিংক কাজ না করলে পোস্টের উপরের \"ব্রোকেন লিংক\" বাটনে ক্লিক করে জানান।</li>\n</ol>\n<h3>সাধারণ সমস্যা ও সমাধান</h3>\n<ul>\n  <li>পপআপ বা বিজ্ঞাপন এলে বন্ধ করে আবার চেষ্টা করুন।</li>\n  <li>ডাউনলোড ধীর হলে অন্য সময়ে বা অন্য কোয়ালিটিতে চেষ্টা করুন।</li>\n  <li>ফাইল না চললে VLC বা MX Player ব্যবহার করুন।</li>\n</ul>", "Request Movie": "<h3>মুভি / সিরিজ রিকোয়েস্ট করুন</h3>\n<p>নাম ও সাল লিখে পাঠান। পাওয়া গেলে দ্রুত আপলোড করা হবে।</p>\n<form id=\"reqform\" style=\"display:grid;gap:12px;max-width:540px\">\n  <input name=\"m\" maxlength=\"150\" placeholder=\"মুভি / সিরিজের নাম (সাল সহ) *\" required style=\"padding:13px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;font:inherit\"/>\n  <input name=\"l\" maxlength=\"60\" placeholder=\"ভাষা (যেমন: Hindi Dubbed)\" style=\"padding:13px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;font:inherit\"/>\n  <textarea name=\"n\" rows=\"3\" maxlength=\"300\" placeholder=\"অতিরিক্ত তথ্য (ঐচ্ছিক)\" style=\"padding:13px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;font:inherit\"></textarea>\n  <input name=\"website\" tabindex=\"-1\" autocomplete=\"off\" style=\"position:absolute;left:-9999px;opacity:0\" aria-hidden=\"true\"/>\n  <button type=\"submit\" class=\"dl-btn\" style=\"border:0;cursor:pointer;justify-content:center\">রিকোয়েস্ট পাঠান</button>\n  <div id=\"reqmsg\" style=\"color:#ffc857;min-height:22px\"></div>\n</form>\n<p>অথবা সরাসরি <a href=\"https://t.me/YOUR_CHANNEL\" target=\"_blank\" rel=\"noopener\">Telegram-এ</a> জানান।</p>", "About Us": "<h3>Cinebdbox সম্পর্কে</h3>\n<p>Cinebdbox একটি মুভি ও ওয়েব সিরিজ তথ্য-ভান্ডার। এখানে নতুন ও জনপ্রিয় মুভি, সিরিজ ও এনিমেশনের তথ্য, রিভিউ, ট্রেইলার ও সংশ্লিষ্ট লিংক এক জায়গায় পাওয়া যায়।</p>\n<h3>আমাদের লক্ষ্য</h3>\n<ul>\n  <li>সহজ ও দ্রুত সার্চ, জনরা ও ক্যাটেগরি অনুযায়ী ব্রাউজ</li>\n  <li>নিয়মিত নতুন কনটেন্ট আপডেট</li>\n  <li>ব্যবহারকারীদের রিকোয়েস্ট ও মতামতকে গুরুত্ব দেওয়া</li>\n</ul>\n<p>যেকোনো প্রয়োজনে <a href=\"/p/contact.html\">যোগাযোগ</a> পেজ দেখুন।</p>", "Contact": "<h3>যোগাযোগ</h3>\n<ul>\n  <li>ইমেইল: <a href=\"mailto:YOUR_EMAIL\">YOUR_EMAIL</a></li>\n  <li>Telegram: <a href=\"https://t.me/YOUR_CHANNEL\" target=\"_blank\" rel=\"noopener\">t.me/YOUR_CHANNEL</a></li>\n  <li>Facebook: <a href=\"https://facebook.com/YOUR_PAGE\" target=\"_blank\" rel=\"noopener\">facebook.com/YOUR_PAGE</a></li>\n</ul>\n<p>মুভি রিকোয়েস্ট করতে <a href=\"/p/request.html\">রিকোয়েস্ট পেজ</a> ব্যবহার করুন। কপিরাইট সংক্রান্ত অভিযোগের জন্য <a href=\"/p/dmca.html\">DMCA পেজ</a> দেখুন।</p>", "DMCA": "<h3>DMCA / কপিরাইট নোটিশ</h3>\n<p>আমরা কপিরাইট আইনকে সম্মান করি। আপনি যদি কপিরাইট মালিক বা তার প্রতিনিধি হন এবং মনে করেন এই সাইটের কোনো কনটেন্ট আপনার অধিকার লঙ্ঘন করছে, নিচের তথ্যসহ ইমেইল করুন:</p>\n<ol>\n  <li>আপনার নাম ও যোগাযোগের তথ্য</li>\n  <li>যে কনটেন্টে আপত্তি, তার সম্পূর্ণ URL</li>\n  <li>আপনি যে কাজের মালিক, তার প্রমাণ বা বিবরণ</li>\n  <li>এই তথ্য সঠিক বলে একটি ঘোষণা</li>\n</ol>\n<p>ইমেইল: <a href=\"mailto:YOUR_EMAIL\">YOUR_EMAIL</a>। বৈধ অভিযোগ পেলে আমরা দ্রুত সংশ্লিষ্ট কনটেন্ট সরিয়ে নেব।</p>", "Privacy Policy": "<h3>প্রাইভেসি পলিসি</h3>\n<p>এই সাইট ব্যবহার করলে নিচের নীতিমালা প্রযোজ্য হবে।</p>\n<h3>আমরা যা সংগ্রহ করি</h3>\n<ul>\n  <li>পেজ ভিউ, ডিভাইস ও ব্রাউজার সংক্রান্ত সাধারণ তথ্য (Google Analytics / Firebase Analytics-এর মাধ্যমে)।</li>\n  <li>আপনি রিকোয়েস্ট ফর্ম বা রিপোর্ট বাটন ব্যবহার করলে আপনার পাঠানো লেখা।</li>\n</ul>\n<h3>কুকিজ ও বিজ্ঞাপন</h3>\n<p>সাইটের কার্যকারিতা ও বিজ্ঞাপন দেখানোর জন্য কুকিজ ব্যবহৃত হতে পারে। তৃতীয় পক্ষের বিজ্ঞাপন সেবা তাদের নিজস্ব কুকিজ ব্যবহার করতে পারে। ব্রাউজার সেটিংস থেকে আপনি কুকিজ বন্ধ করতে পারেন।</p>\n<h3>তথ্যের ব্যবহার</h3>\n<p>সংগৃহীত তথ্য শুধু সাইটের মান উন্নয়ন ও পরিসংখ্যানের জন্য ব্যবহৃত হয়; ব্যক্তিগত তথ্য বিক্রি করা হয় না।</p>\n<p>প্রশ্ন থাকলে: <a href=\"mailto:YOUR_EMAIL\">YOUR_EMAIL</a></p>", "Disclaimer": "<h3>ডিসক্লেইমার</h3>\n<ul>\n  <li>এই সাইটে প্রদর্শিত পোস্টার, নাম, ট্রেইলার ও অন্যান্য উপাদানের সকল স্বত্ব নিজ নিজ মালিকের।</li>\n  <li>তৃতীয় পক্ষের লিংকের কনটেন্ট বা নিরাপত্তার দায় আমরা নিতে পারি না।</li>\n  <li>বিজ্ঞাপন বা বেটিং সাইটের লিংকে ক্লিক করা সম্পূর্ণ ব্যবহারকারীর নিজ দায়িত্ব।</li>\n  <li>কপিরাইট সংক্রান্ত অভিযোগে <a href=\"/p/dmca.html\">DMCA পেজ</a> অনুসরণ করুন।</li>\n</ul>\n\n\n<!-- ################ ৮) DOWNLOAD (প্রিমিয়াম ডাউনলোড পেজ) ################\n  Page title: Download   |   Permalink: download.html\n  এই পেজের HTML view-তে শুধু নিচের এক লাইন দিন। বাকি সব ডিজাইন থিম নিজে বানায়।\n  (পেজের কমেন্ট বন্ধ রাখুন: Page settings → Comments → Don't allow)\n-->\n<div id=\"dlpage\"></div>"};
+async function upSite(o){await update(ref(db,'settings/site'),o)}
+async function addToMenu(title,path){
+  const cur=(await get(ref(db,'settings/site/pages'))).val()||SITE_DEF.pages,lines=String(cur).split('\n').filter(Boolean);
+  if(lines.some(l=>l.split('|')[1]&&l.split('|')[1].trim()===path)){return}
+  const i=lines.findIndex(l=>l.split('|')[0].trim()===title);if(i>=0)lines.splice(i,1);
+  lines.push(title+' | '+path);await upSite({pages:lines.join('\n')});
+}
+/* ---------------- site & menu ---------------- */
+async function vSite(){
+  const cur=(await get(ref(db,'settings/site'))).val()||{};
+  const D=k=>(cur[k]!=null&&cur[k]!=='')?cur[k]:SITE_DEF[k];
+  const ip=(k,l,t='text',ph='')=>`<div><label class="f">${l}</label><input id="st_${k}" type="${t}" value="${esc(D(k))}" placeholder="${esc(ph)}"></div>`;
+  const ta=(k,l,h,r=5)=>`<label class="f">${l}</label>${h?`<p class="hint" style="margin:-4px 0 6px">${h}</p>`:''}<textarea id="st_${k}" style="min-height:${r*24}px">${esc(D(k))}</textarea>`;
+  $('#main').innerHTML=`<h2 class="t">সাইট ও মেনু (লাইভ)</h2><p class="hint" style="margin:-8px 0 14px">এখানে বদলালে থিম ছোঁয়া লাগে না। সেভের পর দর্শক পরের ভিজিটে (একবার রিফ্রেশ হয়ে) নতুন মেনু/রং দেখবে। প্রতি লাইনে একটা, ভাগ করতে <b>|</b> ব্যবহার করুন।</p>
+  <div class="panel"><h3 class="s">নাম, রং ও ৩ডি</h3><div class="row2">${ip('brand1','লোগোর প্রথম অংশ')}${ip('brand2','লোগোর দ্বিতীয় অংশ (রঙিন)')}</div>
+   <div class="row3">${ip('pri','প্রধান রং','color')}${ip('pri2','দ্বিতীয় রং','color')}<div><label class="f">৩ডি এনিমেশন</label><select id="st_fx">${[['full','পূর্ণ (ভাসমান আকার, ৩ডি শোকেস, প্যারালাক্স)'],['lite','হালকা (শুধু কার্ড/সেকশন ৩ডি)'],['off','বন্ধ']].map(x=>`<option value="${x[0]}"${D('fx')===x[0]?' selected':''}>${x[1]}</option>`).join('')}</select></div></div>
+   ${ta('footText','ফুটারের ছোট বর্ণনা','',3)}${ta('disclaimer','ডিসক্লেইমার (সবার নিচে)','',3)}</div>
+  <div class="panel"><h3 class="s">মেনু ও ক্যাটেগরি</h3>
+   ${ta('categories','মুভি মেনু (ক্যাটেগরি)','ফরম্যাট: <b>লেবেল | দেখানোর নাম</b> — লেবেল হুবহু Blogger-এর লেবেলের মতো হতে হবে।',6)}
+   ${ta('genres','জনরা','ফরম্যাট: <b>লেবেল | নাম | ইমোজি</b>',6)}
+   <div class="row2"><div>${ta('years','সাল (কমা দিয়ে)','',2)}</div><div>${ta('qualities','কোয়ালিটি (কমা দিয়ে)','',2)}</div></div>
+   ${ta('countries','দেশ','<b>লেবেল | নাম</b>',4)}${ta('langs','ভাষা (কমা দিয়ে)','',2)}
+   ${ta('extraMenu','অতিরিক্ত মেনু লিংক','<b>নাম | লিংক</b> (ঐচ্ছিক)',2)}
+   ${ta('pages','ফুটারের পেজ লিংক','<b>নাম | /p/page.html</b> — "পেজ" ট্যাব থেকে ৭টা ডিফল্ট পেজ বানালে এটা নিজে ঠিক হয়।',5)}</div>
+  <div class="panel"><h3 class="s">হোম সাজান</h3>
+   <div class="row3">${ip('hero','হিরো স্লাইডারের লেবেল')}${ip('heroCount','হিরোতে কয়টা পোস্ট','number')}${ip('trending','ট্রেন্ডিং লেবেল')}</div>
+   ${ta('rows','হোমের সারি','<b>লেবেল | সারির শিরোনাম</b> — এই ক্রমে নিচে নিচে সারি আসবে।',6)}
+   ${ta('platforms','প্ল্যাটফর্ম কার্ড','<b>লেবেল | দেখানোর নাম | #রং</b> (লোগো "সেটিংস" ট্যাবে)',6)}
+   ${ta('collections','মুভি কালেকশন','<b>লেবেল | নাম</b>',5)}</div>
+  <div class="panel"><h3 class="s">গুরুত্বপূর্ণ লিংক ও ১৮+</h3><div class="row3">${ip('howTo','"কীভাবে ডাউনলোড" পেজ')}${ip('requestUrl','রিকোয়েস্ট পেজ')}${ip('adultLabel','১৮+ লেবেলের নাম','text','18+')}</div>
+   <p class="hint">১৮+ মুভি যোগ করতে পোস্টে লেবেল হিসেবে এই নামটাই (ডিফল্ট <b>18+</b>) দিন। "নতুন পোস্ট"-এ "18+ (লক)" টিকচিহ্ন দিলেও হয়।</p></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="st_sv">সেভ করুন</button><button class="btn gl" id="st_rs">সব ডিফল্টে ফেরান</button></div>`;
+  const KEYS=Object.keys(SITE_DEF);
+  $('#st_sv').onclick=async()=>{
+    const o={};KEYS.forEach(k=>{const e=$('#st_'+k);if(e)o[k]=e.value.trim()});
+    o.heroCount=Math.max(1,Math.min(12,+o.heroCount||6));
+    try{await update(ref(db,'settings'),{site:o});toast('সেভ হয়েছে')}catch(e){toast('সেভ হয়নি: '+(e.message||e),1)}
+  };
+  $('#st_rs').onclick=async()=>{if(!confirm('মেনু, রং ও হোমের সব কাস্টমাইজ মুছে ডিফল্টে ফিরবে। নিশ্চিত?'))return;try{await remove(ref(db,'settings/site'));toast('ডিফল্টে ফেরানো হয়েছে');vSite()}catch(e){toast('হয়নি: '+(e.message||e),1)}};
+}
+/* ---------------- ads: schedule & smart link ---------------- */
+async function vAds(){
+  const SKEYS=SLOTS.concat([['pop','পপআন্ডার (Popunder)'],['extra','অতিরিক্ত স্ক্রিপ্ট (Social Bar ইত্যাদি)'],['fb','Facebook গ্রুপ প্রমো'],['smart','Smart Link']]);
+  const s=(await get(ref(db,'settings'))).val()||{},sc=s.sched||{},sm=s.smart||{};
+  const nowOn=k=>{const x=sc[k];if(!x||!x.use)return true;const n=Date.now(),h=new Date().getHours();if(x.from&&n<new Date(x.from).getTime())return false;if(x.to&&n>new Date(x.to).getTime())return false;
+    if(x.h1!==''&&x.h2!==''&&x.h1!=null&&x.h2!=null){const a=+x.h1,b=+x.h2;if(a<b){if(h<a||h>=b)return false}else if(a>b){if(h<a&&h>=b)return false}}return true};
+  $('#main').innerHTML=`<h2 class="t">বিজ্ঞাপন: সময়সূচি ও Smart Link</h2>
+  <div class="panel"><h3 class="s">Smart Link (Adsterra Direct/Smart Link)</h3><p class="hint">দর্শক কোনো লিংকে ক্লিক করলে মাঝে মাঝে নতুন ট্যাবে এই লিংক খুলবে (Facebook গ্রুপ প্রমোর মতোই; দুটো একসাথে খুললে আগে Facebook, না হলে Smart Link)। একই দর্শককে বারবার দেখানো হয় না।</p>
+   <label class="f" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="sm_on" ${sm.on?'checked':''}> চালু</label>
+   <label class="f">Smart Link URL</label><input id="sm_url" value="${esc(sm.url||'')}" placeholder="https://...">
+   <div class="row3"><div><label class="f">কত শতাংশ ভিজিটে (০–১০০)</label><input id="sm_pct" type="number" value="${esc(sm.pct==null?30:sm.pct)}"></div><div><label class="f">আবার দেখানোর আগে বিরতি (মিনিট)</label><input id="sm_gap" type="number" value="${esc(sm.gap==null?20:sm.gap)}"></div><div><label class="f">কোথায়</label><select id="sm_when"><option value="all"${sm.when!=='post'?' selected':''}>সব পেজে</option><option value="post"${sm.when==='post'?' selected':''}>শুধু পোস্ট ও ডাউনলোড পেজে</option></select></div></div></div>
+  <div class="panel"><h3 class="s">সময়সূচি (কখন কোন বিজ্ঞাপন চলবে)</h3><p class="hint">টিক দিলে সেই বিজ্ঞাপন শুধু নির্দিষ্ট সময়ে চলবে। <b>তারিখ</b>: এই সময়ের মধ্যে। <b>ঘণ্টা</b>: প্রতিদিন কোন সময় (যেমন ১৮ থেকে ২৪ = সন্ধ্যা ৬টা–রাত ১২টা; ২২ থেকে ৬ = রাত ১০টা–ভোর ৬টা)। দর্শকের ফোনের সময় ধরা হয়। বাঁ পাশের বাতিটা এখনকার অবস্থা দেখায়।</p>
+   ${SKEYS.map(([k,l])=>{const x=sc[k]||{};return `<div class="panel slr" data-k="${k}" style="padding:10px;margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:13px"><span style="color:${nowOn(k)?'#2ecc71':'#ff5c6e'}">●</span> ${esc(l)}</b><label style="font-size:13px;display:flex;gap:6px;align-items:center"><input type="checkbox" class="su" ${x.use?'checked':''}> সময়সূচি দিয়ে চালান</label></div>
+    <div class="row2" style="margin-top:6px"><div><label class="f">শুরু (তারিখ-সময়)</label><input type="datetime-local" class="sf" value="${esc(x.from||'')}"></div><div><label class="f">শেষ (তারিখ-সময়)</label><input type="datetime-local" class="st" value="${esc(x.to||'')}"></div></div>
+    <div class="row2"><div><label class="f">প্রতিদিন কখন থেকে (০–২৪ ঘণ্টা)</label><input type="number" min="0" max="24" class="h1" value="${esc(x.h1==null?'':x.h1)}" placeholder="যেমন 18"></div><div><label class="f">কখন পর্যন্ত</label><input type="number" min="0" max="24" class="h2" value="${esc(x.h2==null?'':x.h2)}" placeholder="যেমন 24"></div></div></div>`}).join('')}</div>
+  <button class="btn" id="ad_sv">সেভ করুন</button>`;
+  $('#ad_sv').onclick=async()=>{
+    const sched={};$$('#main .slr').forEach(r=>{const u=$('.su',r).checked;sched[r.dataset.k]={use:u,from:$('.sf',r).value,to:$('.st',r).value,h1:$('.h1',r).value,h2:$('.h2',r).value}});
+    const url=$('#sm_url').value.trim();if(url&&!/^https:\/\//.test(url))return toast('Smart Link https:// দিয়ে শুরু হতে হবে',1);
+    const smart={on:$('#sm_on').checked,url,pct:Math.max(0,Math.min(100,+$('#sm_pct').value||0)),gap:Math.max(0,+$('#sm_gap').value||0),when:$('#sm_when').value};
+    try{await update(ref(db,'settings'),{sched,smart});toast('সেভ হয়েছে')}catch(e){toast('সেভ হয়নি: '+(e.message||e),1)}
   };
 }
 
@@ -861,89 +928,4 @@ async function openEdit(kind,id,back){
   try{await loadLabels();d=await bapi(bb((kind==='post'?'posts/':'pages/')+id),{q:{view:'ADMIN'}})}
   catch(e){if(e.need)return renderConn('এডিট',()=>openEdit(kind,id,back));$('#main').innerHTML=errBox(e);return}
   const isP=kind==='post',live=(d.status||'').toUpperCase()==='LIVE';
-  $('#main').innerHTML=`${dl()}<div style="display:flex;gap:10px;align-items:center;margin-bottom:12px"><button class="btn gl sm" id="eb">← ফিরে যান</button><h2 class="t" style="margin:0;font-size:18px">${isP?'পোস্ট':'পেজ'} এডিট</h2>${stPill(d.status)}</div>
-  <div class="panel"><label class="f">টাইটেল</label><input id="e_title" value="${esc(d.title||'')}">
-  ${isP?`<label class="f">লেবেল (কমা দিয়ে)</label><input id="e_labels" list="lbl" value="${esc((d.labels||[]).join(', '))}"><div class="chk" id="e_chips" style="margin-top:8px">${['Trending','Featured','New Episode','18+'].map(c=>`<button type="button" class="btn sm ${(d.labels||[]).includes(c)?'':'gl'}" data-ch="${c}">${c}</button>`).join('')}</div>`:''}</div>
-  <div class="panel"><h3 class="s">ডাউনলোড লিংক এডিটর</h3><p class="hint" style="margin:-6px 0 8px">ডাউনলোড বাটনের লিংক, কোয়ালিটি ও সাইজ এখানে বদলান। নিচের HTML নিজে থেকে আপডেট হবে।</p><div id="e_links"></div></div>
-  <div class="panel ed"><h3 class="s">HTML</h3>${isP?'<div style="margin-bottom:10px"><button class="btn gl sm" id="e_cast" type="button">TMDB থেকে কাস্ট ছবি যোগ করুন</button> <span class="hint" id="e_castm"></span></div>':''}<textarea id="e_html" spellcheck="false"></textarea></div>
-  <div class="panel"><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="e_save">সেভ করুন</button>${isP&&!live?'<button class="btn ok" id="e_pub">সেভ ও পাবলিশ</button><span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><input type="datetime-local" id="e_sch" style="width:auto"><button class="btn gl" id="e_schb">শিডিউল করুন</button></span>':''}${isP&&live?'<button class="btn gl" id="e_tg">Telegram-এ পোস্ট</button>':''}${isP&&live?'<button class="btn gl" id="e_draft">Draft-এ নিন</button>':''}${d.url&&live?`<a class="btn gl" href="${esc(d.url)}" target="_blank" rel="noopener">সাইটে দেখুন</a>`:''}<button class="btn red" id="e_del">ডিলিট</button></div><div class="hint" id="e_msg"></div></div>`;
-  const ta=$('#e_html');ta.value=d.content||'';
-  const drawLinks=()=>{
-    const L=scanLinks(ta.value);
-    $('#e_links').innerHTML=L.length?L.map((x,i)=>`<div class="lk" data-i="${i}"><small>${esc(x.txt||('লিংক '+(i+1)))}</small><input data-f="q" placeholder="কোয়ালিটি" value="${esc(x.q)}"><input data-f="s" placeholder="সাইজ" value="${esc(x.s)}"><input data-f="href" placeholder="https://..." value="${esc(x.href)}"></div>`).join(''):'<p class="hint">এই লেখায় data-dl ডাউনলোড বাটন নেই।</p>';
-  };
-  drawLinks();
-  $('#e_links').oninput=e=>{
-    const t=e.target,row=t.closest('.lk');if(!row)return;
-    const L=scanLinks(ta.value),x=L[+row.dataset.i];if(!x)return;
-    const attr={q:'data-q',s:'data-s',href:'href'}[t.dataset.f];
-    ta.value=ta.value.slice(0,x.start)+setAttr(x.tag,attr,t.value.trim())+ta.value.slice(x.end);
-  };
-  ta.onchange=drawLinks;
-  if(isP&&$('#e_cast'))$('#e_cast').onclick=async()=>{
-    const m=$('#e_castm');m.textContent='খোঁজা হচ্ছে...';
-    try{
-      const t=$('#e_title').value,name=t.replace(/\s*[\[(].*$/,'').trim()||t,yr=(t.match(/\((\d{4})\)/)||[])[1],tv=/\bS\d{1,2}\b/i.test(t)||(splitL($('#e_labels').value).includes('Web Series'));
-      const pr={query:name};if(yr)pr[tv?'first_air_date_year':'year']=yr;
-      const r=await tmdb('/search/'+(tv?'tv':'movie'),pr),it=(r.results||[])[0];
-      if(!it){m.textContent='TMDB-তে এই নামে কিছু পাওয়া যায়নি';return}
-      const d=await tmdb(`/${tv?'tv':'movie'}/${it.id}`,{append_to_response:'credits'});
-      const c=(d.credits?.cast||[]).filter(x=>x.profile_path).slice(0,10).map(x=>({n:x.name,r:x.character||'',p:'https://image.tmdb.org/t/p/w185'+x.profile_path}));
-      if(!c.length){m.textContent='"'+(d.title||d.name)+'" এর কাস্ট ছবি পাওয়া যায়নি';return}
-      ta.value=setCast(ta.value,c);m.textContent='"'+(d.title||d.name)+'" থেকে '+c.length+' জন যোগ হয়েছে। এখন সেভ করুন।';
-    }catch(e){m.textContent='হয়নি: '+(e.message||e)+' (নতুন পোস্ট ট্যাবে TMDB Key দেওয়া আছে কি?)'}
-  };
-  if(isP){
-    $('#e_chips').onclick=e=>{const b=e.target.closest('[data-ch]');if(!b)return;const inp=$('#e_labels'),c=b.dataset.ch,L=splitL(inp.value),i=L.indexOf(c);i>=0?L.splice(i,1):L.push(c);inp.value=L.join(', ');b.classList.toggle('gl',i>=0)};
-    $('#e_labels').oninput=()=>{const L=splitL($('#e_labels').value);$$('#e_chips [data-ch]').forEach(b=>b.classList.toggle('gl',!L.includes(b.dataset.ch)))};
-  }
-  $('#eb').onclick=()=>go(back||(isP?'posts':'pages'));
-  const save=async pub=>{
-    const m=$('#e_msg');m.textContent='সেভ হচ্ছে...';
-    try{
-      const body={title:$('#e_title').value.trim(),content:ta.value};if(isP){body.labels=splitL($('#e_labels').value);
-        const yt=(body.content.match(/youtube(?:-nocookie)?\.com\/embed\/([\w-]{6,15})/)||[])[1];
-        if(yt&&!/\[\[T:/.test(body.content)&&/\[\[P:\S+?\]\]/.test(body.content))body.content=body.content.replace(/(\[\[P:\S+?\]\])/,'$1[[T:'+yt+']]');}
-      await bapi(bb((isP?'posts/':'pages/')+id),{method:'PATCH',body});
-      if(pub)await bapi(bb('posts/'+id+'/publish'),{method:'POST'});
-      LABELS=null;m.textContent='সেভ হয়েছে ✓';toast(pub?'সেভ ও পাবলিশ হয়েছে':'সেভ হয়েছে');if(pub)openEdit(kind,id,back);
-    }catch(e){m.textContent='হয়নি: '+(e.message||e);if(e.need)toast('আবার সংযুক্ত হয়ে সেভ করুন',1)}
-  };
-  $('#e_save').onclick=()=>save(false);
-  if($('#e_pub'))$('#e_pub').onclick=()=>save(true);
-  if($('#e_schb'))$('#e_schb').onclick=async()=>{const v=$('#e_sch').value;if(!v)return toast('তারিখ ও সময় বাছুন',1);const t=new Date(v);if(!(t>new Date()))return toast('ভবিষ্যতের সময় দিন',1);
-    try{await save(false);await bapi(bb('posts/'+id+'/publish'),{method:'POST',q:{publishDate:t.toISOString()}});toast('শিডিউল হয়েছে: '+t.toLocaleString('bn-BD'));openEdit(kind,id,back)}catch(e){toast('হয়নি: '+(e.message||e),1)}};
-  if($('#e_tg'))$('#e_tg').onclick=async()=>{try{await tgSend({title:$('#e_title').value,url:d.url,content:ta.value,labels:splitL($('#e_labels').value)});toast('Telegram-এ গেছে ✓')}catch(e){toast('হয়নি: '+(e.message||e),1)}};
-  if($('#e_draft'))$('#e_draft').onclick=async()=>{try{await bapi(bb('posts/'+id+'/revert'),{method:'POST'});toast('Draft-এ নেওয়া হয়েছে');openEdit(kind,id,back)}catch(e){toast('হয়নি: '+(e.message||e),1)}};
-  $('#e_del').onclick=async()=>{
-    if(!confirm('ডিলিট করবেন? "'+(d.title||'')+'"\nএটা ফেরানো যাবে না।'))return;
-    try{await bapi(bb((isP?'posts/':'pages/')+id),{method:'DELETE'});PS.items=PS.items.filter(x=>x.id!==id);toast('ডিলিট হয়েছে');go(back||(isP?'posts':'pages'))}catch(e){toast('হয়নি: '+(e.message||e),1)}
-  };
-}
-
-/* ---------------- pages manager ---------------- */
-async function vPages(){
-  if(!bOn())return renderConn('পেজ ম্যানেজার',vPages);
-  $('#main').innerHTML=`<h2 class="t">পেজ ম্যানেজার</h2><div class="panel" style="display:flex;gap:8px"><input id="np" placeholder="নতুন পেজের নাম"><button class="btn" id="npb">নতুন পেজ</button></div><div id="pgl"><div class="skl"></div></div>`;
-  let items=[];
-  const draw=()=>{$('#pgl').innerHTML=items.map(p=>`<div class="item" data-id="${esc(p.id)}"><div class="h"><div><b>${esc(p.title||'(নামহীন)')}</b> ${stPill(p.status)}<br><small>${esc((p.url||'').replace(/^https?:\/\/[^\/]+/,''))} • ${when(p.updated)}</small></div></div><div class="acts"><button class="btn gl sm" data-a="edit">এডিট</button>${p.url?`<a class="btn gl sm" href="${esc(p.url)}" target="_blank" rel="noopener">দেখুন</a>`:''}<button class="btn red sm" data-a="del">ডিলিট</button></div></div>`).join('')||'<p class="hint">কোনো পেজ নেই।</p>'};
-  try{const j=await bapi(bb('pages'),{q:{fetchBodies:false,status:['live','draft'],view:'ADMIN'}});items=j.items||[];draw()}
-  catch(e){if(e.need)return renderConn('পেজ ম্যানেজার',vPages);$('#pgl').innerHTML=errBox(e);return}
-  $('#npb').onclick=async()=>{const t=$('#np').value.trim();if(!t)return;try{const r=await bapi(bb('pages'),{method:'POST',body:{kind:'blogger#page',title:t,content:''}});openEdit('page',r.id,'pages')}catch(e){toast('হয়নি: '+(e.message||e),1)}};
-  $('#main').onclick=async e=>{
-    const a=e.target.closest('[data-a]');if(!a)return;const id=a.closest('.item').dataset.id,p=items.find(x=>x.id===id);
-    if(a.dataset.a==='edit')return openEdit('page',id,'pages');
-    if(!confirm('"'+(p.title||'')+'" পেজ ডিলিট করবেন?'))return;
-    try{await bapi(bb('pages/'+id),{method:'DELETE'});items=items.filter(x=>x.id!==id);draw();toast('ডিলিট হয়েছে')}catch(err){toast('হয়নি: '+(err.message||err),1)}
-  };
-}
-
-/* ---------------- boot ---------------- */
-onAuthStateChanged(auth,async u=>{
-  if(!u)return showLogin();
-  try{const s=await get(ref(db,'admins/'+u.uid));if(s.val()!==true)return showDenied(u)}catch{return showDenied(u)}
-  showApp(u);
-});
-</script>
-</body>
-</html>
+  $('#main').innerHTML=`${dl()}<div style="display:flex;gap:10px;align-items:center;margin-bottom:12px"><button class="btn gl sm" id="eb">← ফিরে যান</button><h2 class="t" style="margin:0;font-size:18px">${isP?'পোস্ট':'পেজ'} এডিট</h2>${stPill(d.status)}</div
